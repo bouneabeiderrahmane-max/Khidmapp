@@ -10,8 +10,10 @@ use App\Models\Address;
 use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\ProductVariant;
+use App\Services\Notification\NotificationService;
 use App\Services\Order\OrderStatusTransitioner;
 use App\Services\Pricing\CartPricingCalculator;
+use App\Support\NotificationTemplate;
 use App\Support\OrderActorType;
 use App\Support\OrderStatus;
 use Illuminate\Http\JsonResponse;
@@ -24,6 +26,7 @@ class OrderController extends Controller
     public function __construct(
         private readonly CartPricingCalculator $calculator,
         private readonly OrderStatusTransitioner $transitioner,
+        private readonly NotificationService $notifications,
     ) {}
 
     /**
@@ -132,6 +135,8 @@ class OrderController extends Controller
 
             return $order;
         });
+
+        $this->notifications->notify($order->user, NotificationTemplate::ORDER_CONFIRMED, ['order_id' => $order->id, 'total' => $order->total_mru]);
 
         return (new OrderResource($order->load(['items', 'statusHistories', 'payments'])))->response()->setStatusCode(201);
     }

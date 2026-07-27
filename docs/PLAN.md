@@ -162,7 +162,7 @@ Exemple de référence (8.3.1) : 29,95 € × 47,50 MRU/€ = 1 422,63 MRU + 20 
 | 6 | Panier & commande (state machine 15 statuts) | **Fait** (voir §7septies) |
 | 7 | Paiements (Bankily + manuel) | **Fait** (voir §7octies) |
 | 8 | Logistique (10 étapes, alertes SLA) | **Fait** (voir §7nonies) |
-| 9 | Notifications (FCM/SMS/e-mail) | À venir |
+| 9 | Notifications (FCM/SMS/e-mail) | **Fait** (voir §7decies) |
 | 10 | Support & réclamations | À venir |
 | 11 | Administration & pilotage (dashboard, exports) | À venir |
 
@@ -323,6 +323,26 @@ Exemple de référence (8.3.1) : 29,95 € × 47,50 MRU/€ = 1 422,63 MRU + 20 
 
 ---
 
+## 7decies. Sprint 9 — ce qui a été livré
+
+**Table unique `notification_logs`** (délibérément pas `notifications`, pour ne pas entrer en collision avec le système de notifications intégré de Laravel — le trait `Notifiable` déjà présent sur `User` depuis le Sprint 0 définit sa propre relation `notifications()` vers une table `notifications` au schéma différent, jamais utilisée dans ce projet) : historise chaque envoi individuel (un enregistrement par canal tenté), succès ou échec, avec le contenu rendu et le contexte — répond à l'exigence 8.7.2 ("chaque notification envoyée est historisée").
+
+**`NotificationService`** : point d'entrée unique, rend le contenu bilingue dans la langue préférée du destinataire (`trans(..., $locale)`, jamais la locale de la requête courante — important puisqu'une action admin, ex. valider un paiement, notifie le *client*, pas l'agent), résout les canaux applicables et historise chaque tentative indépendamment (une panne sur un canal — ex. e-mail chez un client inscrit uniquement par téléphone — n'empêche pas les autres canaux, vérifié par test et en HTTP réel).
+
+**Résolution des canaux (8.7.1, 8.7.2)** : push est le canal par défaut pour tout gabarit. SMS et e-mail sont restreints par gabarit (`config('notifications.sms_eligible_templates')` / `email_eligible_templates`) conformément au texte du CDC ("SMS pour les événements critiques (paiement, livraison)", "e-mail pour les récapitulatifs de commande" — aucun système de facture séparé n'existe, l'e-mail est donc limité à la confirmation de commande). Un gabarit critique (`config('notifications.critical_templates')` — paiement validé, annulation, remboursement ; seul le premier est cité explicitement par le CDC, les deux autres sont une extension raisonnable pour les événements à impact financier direct) est **garanti d'atteindre le client par au moins un canal** même si tous ses canaux sont désactivés — repli sur push, le seul canal sans coût ni dépendance externe — sans pour autant forcer spécifiquement push si un autre canal reste actif (8.7.2 exige "au moins un canal", pas un canal précis).
+
+**Câblage des 10 déclencheurs (8.7)** : `OrderStatusTransitioner` déclenche automatiquement la notification associée à chaque statut notifiable après une transition réussie (`config('notifications.order_status_templates')` — seuls les statuts explicitement listés par le CDC déclenchent une notification ; les étapes internes sans notification client dédiée, ex. `achat_en_cours`, `expedie_boutique`, `consolidation`, n'en déclenchent aucune). La confirmation de commande (statut initial, jamais atteint via une transition) est déclenchée directement dans les deux contrôleurs de création de commande (client et manuel admin) ; l'anomalie de contrôle qualité (Sprint 8) dans `QualityControlController` lors d'un rapport non conforme.
+
+**Endpoints** : `GET /api/v1/notifications` (historique du client connecté), `GET/PUT /api/v1/notification-preferences` (activer/désactiver chaque canal individuellement, valeur par défaut : tout activé), `GET /api/v1/admin/notifications` (consultation globale filtrable par client/canal/statut/gabarit, permission `notifications.view`, extension naturelle du RBAC comme `orders.manage_status`/`payments.validate_manual`).
+
+**Points signalés explicitement — placeholders** :
+- `App\Services\Notification\LogPushGateway` **n'est pas une intégration Firebase Cloud Messaging fonctionnelle** — aucun projet/identifiants Firebase n'existe (mêmes `FCM_PROJECT_ID`/`FCM_CREDENTIALS_PATH` vides que depuis le Sprint 0). Écrit dans les logs, comme `LogSmsGateway`.
+- L'e-mail, en revanche, passe par le vrai système `Mail` de Laravel (`MAIL_MAILER=log` en développement) — ce n'est pas un placeholder custom, juste un pilote de développement standard ; à basculer vers un pilote réel (SMTP, SES, etc.) en production.
+
+**Tests** : 21 nouveaux tests (Unit : `NotificationService` — canal par défaut, préférence désactivée, repli critique garanti, éligibilité SMS/e-mail par gabarit, isolation des échecs par canal, rendu dans la langue du destinataire ; Feature : préférences — valeurs par défaut, mise à jour partielle —, historique client — isolation entre utilisateurs —, consultation admin — permissions, filtre par statut —, déclencheurs bout-en-bout — confirmation de commande, transition de statut notifiable/non notifiable, anomalie de contrôle qualité conforme/non conforme) — 207 tests au total, tous verts. Style Pint conforme. Migrations validées sur PostgreSQL réel (`migrate:fresh` + seed) ; parcours complet vérifié en HTTP réel (commande → paiement validé → achat → réception Madrid → anomalie qualité → expédition → livraison, avec désactivation SMS à mi-parcours effectivement respectée).
+
+---
+
 ## 8. Points encore ouverts
 
 1. Détail fin des permissions par sous-action au sein de chaque module (la matrice CDC 7.5 est une synthèse ; la granularité complète sera affinée module par module au fil des sprints, avec validation à chaque fois).
@@ -334,5 +354,7 @@ Exemple de référence (8.3.1) : 29,95 € × 47,50 MRU/€ = 1 422,63 MRU + 20 
 7. **Frais d'annulation tardive marqués mais jamais prélevés** (`cancellation_fee_applicable = true`) : la validation d'un paiement Bankily/manuel confirme la commande, mais aucun mécanisme de prélèvement de frais d'annulation tardive n'existe — la commande est juste signalée au service client pour traitement manuel (voir §7septies).
 8. **Vraie intégration Bankily** : identifiants marchands, format d'API réel, schéma de signature de webhook — tout est à obtenir/spécifier par Bankily avant mise en production ; `StubBankilyGateway` n'est qu'un simulateur local (voir §7octies).
 9. **Commutateur "bloquer une nouvelle commande si preuve en attente" non exposé dans l'UI admin** (8.5.3 prévoit une exception "configuration contraire de l'administrateur") : c'est pour l'instant une valeur de configuration statique, faute d'un module de réglages globaux modifiables depuis l'administration (voir §7octies).
-10. **Délais SLA logistiques indicatifs, pas mesurés** (`config('logistics.step_sla_hours')`) et **alertes de dépassement non poussées** (détection interne seulement, faute du module Notifications — Sprint 9) — voir §7nonies.
+10. **Délais SLA logistiques indicatifs, pas mesurés** (`config('logistics.step_sla_hours')`) — voir §7nonies.
 11. **Non-conformité qualité sans lien automatique vers une réclamation** : le module Réclamations n'existe pas encore (Sprint 10) ; le rapport de non-conformité est consigné mais n'ouvre rien automatiquement pour l'instant (voir §7nonies).
+12. **Vraie intégration Firebase Cloud Messaging** : aucun projet/identifiants Firebase n'existe ; `LogPushGateway` n'est qu'un simulateur local (voir §7decies).
+13. **Alertes de dépassement de délai (Sprint 8) toujours non poussées au client** : le module Notifications existe désormais, mais `LogisticsAlertService` n'est pas encore relié à `NotificationService` — cette liaison ("notification proactive au client" en cas de dépassement, 8.6.2) reste à faire, faute d'avoir été explicitement redemandée pour ce sprint (voir §7nonies/§7decies).

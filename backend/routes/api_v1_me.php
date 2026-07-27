@@ -4,6 +4,7 @@ use App\Http\Controllers\Cart\CartController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\Payment\PaymentController;
 use App\Http\Controllers\Profile\AddressController;
+use App\Http\Controllers\Profile\NotificationController;
 use App\Http\Controllers\Profile\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,3 +26,7 @@ Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel']);
 
 Route::post('/orders/{order}/payments/bankily/initiate', [PaymentController::class, 'initiateBankily']);
 Route::post('/orders/{order}/payment-proof', [PaymentController::class, 'submitProof']);
+
+Route::get('/notifications', [NotificationController::class, 'index']);
+Route::get('/notification-preferences', [NotificationController::class, 'showPreferences']);
+Route::put('/notification-preferences', [NotificationController::class, 'updatePreferences']);

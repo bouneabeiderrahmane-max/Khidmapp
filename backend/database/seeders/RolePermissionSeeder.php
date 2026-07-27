@@ -34,6 +34,7 @@ class RolePermissionSeeder extends Seeder
             Permissions::ORDERS_MANAGE_STATUS,
             Permissions::PAYMENTS_VALIDATE_MANUAL,
             Permissions::DASHBOARD_VIEW_LIMITED,
+            Permissions::NOTIFICATIONS_VIEW,
         ]);
 
         $administrateur = Role::findOrCreate(Roles::ADMINISTRATEUR);
@@ -46,6 +47,7 @@ class RolePermissionSeeder extends Seeder
             Permissions::CATALOG_MANAGE,
             Permissions::ROLES_MANAGE,
             Permissions::DASHBOARD_VIEW_FULL,
+            Permissions::NOTIFICATIONS_VIEW,
         ]);
     }
 }

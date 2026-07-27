@@ -8,6 +8,8 @@ use App\Http\Resources\QualityControlReportResource;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\QualityControlReport;
+use App\Services\Notification\NotificationService;
+use App\Support\NotificationTemplate;
 use App\Support\OrderStatus;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -26,6 +28,8 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
  */
 class QualityControlController extends Controller
 {
+    public function __construct(private readonly NotificationService $notifications) {}
+
     public function index(Order $order): AnonymousResourceCollection
     {
         $reports = QualityControlReport::query()
@@ -47,6 +51,10 @@ class QualityControlController extends Controller
             'is_conforme' => $request->boolean('is_conforme'),
             'notes' => $request->input('notes'),
         ]);
+
+        if (! $report->is_conforme) {
+            $this->notifications->notify($order->user, NotificationTemplate::QUALITY_CONTROL_ANOMALY, ['order_id' => $order->id]);
+        }
 
         return new QualityControlReportResource($report->load('reporter'));
     }

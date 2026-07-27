@@ -41,6 +41,15 @@ final class Permissions
 
     public const DASHBOARD_VIEW_LIMITED = 'dashboard.view_limited';
 
+    /**
+     * Consultation de l'historique des notifications envoyées, tous
+     * clients confondus (8.7.2 : "consultable... dans l'administration") —
+     * pas dans la matrice de synthèse 7.5, extension naturelle du RBAC
+     * granulaire (8.9.6), au même titre que orders.manage_status/
+     * payments.validate_manual (Sprints 6/7).
+     */
+    public const NOTIFICATIONS_VIEW = 'notifications.view';
+
     public static function all(): array
     {
         return [
@@ -53,6 +62,7 @@ final class Permissions
             self::ROLES_MANAGE,
             self::DASHBOARD_VIEW_FULL,
             self::DASHBOARD_VIEW_LIMITED,
+            self::NOTIFICATIONS_VIEW,
         ];
     }
 }

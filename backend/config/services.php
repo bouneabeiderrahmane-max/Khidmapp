@@ -35,4 +35,20 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Firebase Cloud Messaging (notifications push — CDC 8.7.1)
+    |--------------------------------------------------------------------------
+    |
+    | Non consommé pour l'instant : App\Services\Notification\LogPushGateway
+    | n'effectue aucun appel réseau (voir son docblock). Réservé à la vraie
+    | implémentation qui remplacera le placeholder.
+    |
+    */
+
+    'fcm' => [
+        'project_id' => env('FCM_PROJECT_ID'),
+        'credentials_path' => env('FCM_CREDENTIALS_PATH'),
+    ],
+
 ];

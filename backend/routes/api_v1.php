@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\DeliveryFeeTierController;
 use App\Http\Controllers\Admin\ExchangeRateController;
 use App\Http\Controllers\Admin\LogisticsController;
 use App\Http\Controllers\Admin\MarginRuleController;
+use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
@@ -103,6 +104,10 @@ Route::middleware(['auth:api', 'can:payments.validate_manual'])->prefix('admin')
     Route::post('/payments/{payment}/validate', [AdminPaymentController::class, 'validatePayment']);
     Route::post('/payments/{payment}/reject', [AdminPaymentController::class, 'reject']);
     Route::post('/payments/{payment}/request-info', [AdminPaymentController::class, 'requestInfo']);
+});
+
+Route::middleware(['auth:api', 'can:notifications.view'])->prefix('admin')->group(function () {
+    Route::get('/notifications', [AdminNotificationController::class, 'index']);
 });
 
 Route::post('/webhooks/bankily', [BankilyWebhookController::class, 'handle']);

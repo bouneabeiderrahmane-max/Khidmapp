@@ -113,8 +113,23 @@ Aucun prix EUR, URL ou référence de boutique source n'est jamais exposé sur c
 > **Notes** :
 > - Pas de nouvelle table pour les « 10 étapes » du CDC (8.6) : elles recoupent presque terme à terme les 15 statuts de commande déjà historisés (`order_status_histories`, Sprint 6) — dupliquer cette information dans une table `logistics_events` séparée n'aurait rien apporté.
 > - Les délais indicatifs par statut (`config('logistics.step_sla_hours')`) sont des estimations, pas des données mesurées — le cahier des charges ne fournit de chiffre exact que pour deux étapes très en amont (paiement) et indique explicitement que le délai boutique → Madrid varie « selon boutique » sans cible fixe.
-> - Les alertes de dépassement sont calculées à la demande (aucune table dédiée) et **ne déclenchent aucune notification poussée** — le module Notifications (Sprint 9) n'existe pas encore.
-> - Une non-conformité qualité est consignée mais **n'ouvre pas automatiquement de réclamation** — le module Réclamations (Sprint 10) n'existe pas encore ; le CDC prévoit pourtant cette automatisation (8.6.1).
+> - Les alertes de dépassement sont calculées à la demande (aucune table dédiée) et **ne déclenchent toujours aucune notification poussée** — `LogisticsAlertService` n'est pas encore relié à `NotificationService` (Sprint 9), cette liaison reste à faire.
+> - Une non-conformité qualité est consignée mais **n'ouvre pas automatiquement de réclamation** — le module Réclamations (Sprint 10) n'existe pas encore ; le CDC prévoit pourtant cette automatisation (8.6.1). Une notification client est en revanche bien envoyée (Sprint 9).
+
+## Notifications (Sprint 9)
+
+- `GET /api/v1/notifications` — historique des notifications reçues par le client connecté (8.7.2)
+- `GET/PUT /api/v1/notification-preferences` — activer/désactiver chaque canal (push/sms/email) individuellement, tout activé par défaut
+- `GET /api/v1/admin/notifications` — consultation globale, filtrable par `user_id`/`channel`/`status`/`template_key` (permission `notifications.view`)
+
+10 déclencheurs automatiques (8.7) câblés de bout en bout : confirmation de commande (les deux parcours de création), chaque transition de statut notifiable (`OrderStatusTransitioner`, `config('notifications.order_status_templates')`), et anomalie de contrôle qualité (`QualityControlController`, Sprint 8).
+
+> **Notes** :
+> - `App\Services\Notification\LogPushGateway` **n'est pas une intégration Firebase Cloud Messaging fonctionnelle** — aucun projet/identifiants Firebase n'existe. Écrit dans les logs, comme `LogSmsGateway`.
+> - L'e-mail passe par le vrai système `Mail` de Laravel (`MAIL_MAILER=log` en développement, pas un placeholder custom) — à basculer vers un pilote réel en production.
+> - SMS et e-mail sont restreints par gabarit (8.7.1 : SMS pour paiement/livraison uniquement, e-mail pour la confirmation de commande uniquement) ; push est le canal par défaut pour tout gabarit.
+> - Un gabarit critique (paiement validé, annulation, remboursement) est garanti d'atteindre le client par au moins un canal même si tous ses canaux sont désactivés (repli sur push) — sans forcer spécifiquement push si un autre canal reste actif.
+> - Table nommée `notification_logs`, pas `notifications`, pour ne pas entrer en collision avec la relation `notifications()` du trait `Notifiable` de Laravel (présent sur `User` depuis le Sprint 0, jamais utilisé dans ce projet).
 
 ## Tests
 
