@@ -6,16 +6,35 @@ Plateforme mobile et web de shopping international : les clients basés en Mauri
 
 ```
 khidmapp/
-├── backend/   # API Laravel (REST, PostgreSQL, Redis, JWT)
-├── mobile/    # Application Flutter (Android + iOS)
+├── backend/   # API Laravel (REST, PostgreSQL, Redis, JWT) — voir backend/README.md
+├── mobile/    # Application Flutter (Android + iOS) — voir mobile/README.md
 ├── admin/     # Interface d'administration web (React)
 ├── docs/      # Documentation technique & fonctionnelle
+├── docker-compose.yml   # Postgres + Redis + MinIO pour le développement local
+```
+
+## Démarrage rapide
+
+```bash
+# Infra locale (Postgres, Redis, MinIO)
+docker compose up -d
+
+# Backend
+cd backend && cp .env.example .env && composer install
+php artisan key:generate && php artisan jwt:secret && php artisan migrate
+php artisan serve
+
+# Admin
+cd admin && npm install && npm run dev
+
+# Mobile
+cd mobile && flutter pub get && flutter gen-l10n && flutter run
 ```
 
 ## Documentation
 
-- [`docs/PLAN.md`](docs/PLAN.md) — plan de développement détaillé (architecture, schéma de données, découpage en sprints), actuellement en brouillon soumis à validation.
+- [`docs/PLAN.md`](docs/PLAN.md) — plan de développement détaillé : architecture, schéma de données, cycle de statuts de commande, matrice de permissions, découpage en sprints.
 
 ## Statut du projet
 
-Phase de cadrage : aucun code applicatif n'a encore été écrit. Voir `docs/PLAN.md` pour les points en attente de validation avant le démarrage du développement (Sprint 0).
+Sprint 0 (socle technique) terminé : backend Laravel (JWT, RBAC, i18n FR/AR, OpenAPI), admin React (i18n/RTL vérifié), mobile Flutter (i18n/RTL, routing), Docker Compose, CI GitHub Actions pour les trois applications. Voir `docs/PLAN.md` section 7 pour le détail, et section 8 pour les points encore ouverts avant d'attaquer le Sprint 1.

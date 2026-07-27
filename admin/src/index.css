@@ -1,0 +1,5 @@
+@import "tailwindcss";
+
+html[dir="rtl"] body {
+  font-family: "Noto Kufi Arabic", "Segoe UI", Tahoma, sans-serif;
+}

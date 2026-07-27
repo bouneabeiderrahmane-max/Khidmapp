@@ -1,0 +1,17 @@
+{
+  "@@locale": "fr",
+  "appName": "Khidmapp",
+  "navCatalog": "Catalogue",
+  "navCart": "Panier",
+  "navOrders": "Commandes",
+  "navSupport": "Support",
+  "navAccount": "Compte",
+  "login": "Connexion",
+  "loginPhone": "Numéro de téléphone",
+  "loginOtpSent": "Un code de vérification vous a été envoyé par SMS",
+  "cartEmpty": "Votre panier est vide",
+  "orderStatusDraft": "Brouillon",
+  "orderStatusAwaitingPayment": "Paiement en attente",
+  "orderStatusPaid": "Paiement validé",
+  "orderStatusDelivered": "Livré"
+}

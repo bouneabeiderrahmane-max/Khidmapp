@@ -1,0 +1,26 @@
+{
+  "app": {
+    "name": "Khidmapp Admin"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "boutiques": "Boutiques",
+    "orders": "Commandes",
+    "payments": "Paiements",
+    "users": "Utilisateurs",
+    "roles": "Rôles et permissions",
+    "reports": "Rapports"
+  },
+  "auth": {
+    "login": "Connexion",
+    "logout": "Déconnexion",
+    "email": "E-mail",
+    "password": "Mot de passe"
+  },
+  "common": {
+    "loading": "Chargement…",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "search": "Rechercher"
+  }
+}

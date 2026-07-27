@@ -1,0 +1,67 @@
+name: khidmapp
+
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: khidmapp
+      POSTGRES_USER: khidmapp
+      POSTGRES_PASSWORD: khidmapp
+    ports:
+      - "5432:5432"
+    volumes:
+      - khidmapp_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U khidmapp"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - khidmapp_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: khidmapp
+      MINIO_ROOT_PASSWORD: khidmapp_secret
+    ports:
+      - "9000:9000"   # API S3
+      - "9001:9001"   # Console web
+    volumes:
+      - khidmapp_minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 khidmapp khidmapp_secret &&
+      mc mb -p local/khidmapp &&
+      mc anonymous set download local/khidmapp
+      "
+
+volumes:
+  khidmapp_postgres_data:
+  khidmapp_redis_data:
+  khidmapp_minio_data:

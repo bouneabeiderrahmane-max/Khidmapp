@@ -1,0 +1,17 @@
+{
+  "@@locale": "ar",
+  "appName": "خدمة آب",
+  "navCatalog": "الكتالوج",
+  "navCart": "السلة",
+  "navOrders": "الطلبات",
+  "navSupport": "الدعم",
+  "navAccount": "الحساب",
+  "login": "تسجيل الدخول",
+  "loginPhone": "رقم الهاتف",
+  "loginOtpSent": "تم إرسال رمز التحقق عبر الرسائل القصيرة",
+  "cartEmpty": "سلتك فارغة",
+  "orderStatusDraft": "مسودة",
+  "orderStatusAwaitingPayment": "في انتظار الدفع",
+  "orderStatusPaid": "تم تأكيد الدفع",
+  "orderStatusDelivered": "تم التسليم"
+}
