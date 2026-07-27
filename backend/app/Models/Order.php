@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Order extends Model
 {
@@ -54,6 +55,17 @@ class Order extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class)->orderBy('created_at');
+    }
+
+    /**
+     * Entrée la plus récente de l'historique de statuts — sert de "date
+     * d'entrée dans le statut courant" pour le calcul des dépassements de
+     * délai (8.6.2), sans dupliquer order_status_histories dans une table
+     * séparée.
+     */
+    public function latestStatusHistory(): HasOne
+    {
+        return $this->hasOne(OrderStatusHistory::class)->latestOfMany();
     }
 
     public function scopeActive(Builder $query): Builder

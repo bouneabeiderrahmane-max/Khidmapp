@@ -161,7 +161,7 @@ Exemple de référence (8.3.1) : 29,95 € × 47,50 MRU/€ = 1 422,63 MRU + 20 
 | 5 | Catalogue & recherche | **Fait** (voir §7sexies) |
 | 6 | Panier & commande (state machine 15 statuts) | **Fait** (voir §7septies) |
 | 7 | Paiements (Bankily + manuel) | **Fait** (voir §7octies) |
-| 8 | Logistique (10 étapes, alertes SLA) | À venir |
+| 8 | Logistique (10 étapes, alertes SLA) | **Fait** (voir §7nonies) |
 | 9 | Notifications (FCM/SMS/e-mail) | À venir |
 | 10 | Support & réclamations | À venir |
 | 11 | Administration & pilotage (dashboard, exports) | À venir |
@@ -305,6 +305,24 @@ Exemple de référence (8.3.1) : 29,95 € × 47,50 MRU/€ = 1 422,63 MRU + 20 
 
 ---
 
+## 7nonies. Sprint 8 — ce qui a été livré
+
+**Pas de nouvelle table pour les "10 étapes"** : le choix architectural du Sprint 6 (state machine des 15 statuts + `order_status_histories` historisant chaque transition avec horodatage) couvre déjà, presque terme à terme, les 10 étapes de la chaîne logistique du CDC (8.6) — la table `logistics_events` esquissée en §2 avant le début du développement aurait dupliqué `order_status_histories` sans rien apporter. Ajout d'une seule relation, `Order::latestStatusHistory()` (`hasOne(...)->latestOfMany()`), pour retrouver efficacement la date d'entrée dans le statut courant de chaque commande.
+
+**Alertes de dépassement de délai (8.6.2)** : `LogisticsAlertService::currentAlerts()` compare, pour chaque commande active, le temps passé dans son statut courant à un délai indicatif configurable (`config('logistics.step_sla_hours')`) et retourne les commandes en dépassement, triées par ampleur décroissante — exposé en lecture seule via `GET /api/v1/admin/logistics/alerts` (permission `orders.manage_status`, déjà confirmée pour la supervision globale — 7.4). Calculé à la demande, sans table dédiée ni notification poussée : le module Notifications (Sprint 9) n'existe pas encore pour porter une "notification proactive au client" — seule la détection interne est livrée ce sprint.
+
+**Tableau de bord logistique (8.6.2)** : `GET /api/v1/admin/logistics/dashboard` — nombre de commandes actives par statut, en temps réel, toutes les étapes non terminales incluses même à zéro (pour une vue complète de la chaîne). Volontairement limité à ce périmètre logistique ; le tableau de bord global (chiffre d'affaires, exports, KPI transverses — 7.4) reste au Sprint 11.
+
+**Contrôle qualité (8.6.1)** : `POST /api/v1/admin/orders/{id}/items/{itemId}/quality-control` enregistre un rapport de conformité par article (modèle/couleur/taille + état visuel), réservé au statut "Contrôle qualité" de la commande ; motif obligatoire en cas de non-conformité. `GET .../quality-control` liste l'historique complet des rapports d'un article. Effectué "physiquement" par l'entrepôt 3PL mais enregistré par un agent Khidmapp (service client/administrateur), faute de rôle 3PL distinct dans le RBAC confirmé (7.1, 3 rôles seulement).
+
+**Point signalé explicitement — lien réclamation non câblé** : le CDC (8.6.1) prévoit qu'une non-conformité déclenche "l'ouverture automatique d'une réclamation interne". Le module Réclamations n'existe pas encore (Sprint 10) : ce sprint se limite donc à consigner le rapport de non-conformité ; l'ouverture automatique d'une réclamation sera câblée dès que ce module existera.
+
+**Délais indicatifs par statut — placeholders documentés** : le cahier des charges ne fournit de chiffre exact que pour deux étapes très en amont (confirmation Bankily < 30 s, traitement d'une preuve manuelle < 24 h ouvrées) et précise explicitement que le délai boutique → Madrid varie "selon boutique" sans cible fixe. Les onze valeurs de `config('logistics.step_sla_hours')` sont donc des estimations raisonnables, pas des données mesurées — même statut que l'estimation de livraison statique du Sprint 5, à remplacer dès que de vraies données opérationnelles existeront (idéalement différenciées par boutique/transporteur).
+
+**Tests** : 13 nouveaux tests (Unit : `LogisticsAlertService` — dans les clous/en dépassement, commandes terminales jamais alertées, tri par ampleur décroissante ; Feature : contrôle qualité — permissions, motif obligatoire si non conforme, restriction au statut "Contrôle qualité", isolation article/commande, historique multi-rapports —, tableau de bord et alertes — permissions, comptage par statut, détection de dépassement) — 186 tests au total, tous verts. Style Pint conforme. Migrations validées sur PostgreSQL réel (`migrate:fresh` + seed) ; parcours complet vérifié en HTTP réel (commande avancée jusqu'à "Contrôle qualité", rapport de non-conformité, tableau de bord et alertes consultés).
+
+---
+
 ## 8. Points encore ouverts
 
 1. Détail fin des permissions par sous-action au sein de chaque module (la matrice CDC 7.5 est une synthèse ; la granularité complète sera affinée module par module au fil des sprints, avec validation à chaque fois).
@@ -312,7 +330,9 @@ Exemple de référence (8.3.1) : 29,95 € × 47,50 MRU/€ = 1 422,63 MRU + 20 
 3. Upload réel de logo/bannière boutique (actuellement de simples URL) — à raccorder au stockage S3/MinIO si un flux d'upload dédié est souhaité plutôt que de simples liens externes.
 4. **Un vrai `CatalogFetcher` par boutique** (scraping respectueux des CGU ou accord avec les boutiques) et **un vrai `TranslatorGateway`** — non spécifiés par le cahier des charges, à trancher avant mise en production (voir §7quater).
 5. Poids/volume produit non modélisés (choix Sprint 4 : grille de livraison par tranche de prix) — à réévaluer si une grille par poids/volume s'avère nécessaire plus tard (voir §7quinquies).
-6. **Délai de livraison affiché statique** (15–25 jours, non calculé) et **recherche/tri par prix en mémoire plutôt qu'en SQL** — deux limites techniques assumées à revisiter avec de vraies données logistiques (Sprint 8) et/ou un catalogue à plus grande échelle (voir §7sexies).
+6. **Délai de livraison affiché statique** (15–25 jours, non calculé) et **recherche/tri par prix en mémoire plutôt qu'en SQL** — deux limites techniques assumées à revisiter avec de vraies données logistiques et/ou un catalogue à plus grande échelle (voir §7sexies).
 7. **Frais d'annulation tardive marqués mais jamais prélevés** (`cancellation_fee_applicable = true`) : la validation d'un paiement Bankily/manuel confirme la commande, mais aucun mécanisme de prélèvement de frais d'annulation tardive n'existe — la commande est juste signalée au service client pour traitement manuel (voir §7septies).
 8. **Vraie intégration Bankily** : identifiants marchands, format d'API réel, schéma de signature de webhook — tout est à obtenir/spécifier par Bankily avant mise en production ; `StubBankilyGateway` n'est qu'un simulateur local (voir §7octies).
 9. **Commutateur "bloquer une nouvelle commande si preuve en attente" non exposé dans l'UI admin** (8.5.3 prévoit une exception "configuration contraire de l'administrateur") : c'est pour l'instant une valeur de configuration statique, faute d'un module de réglages globaux modifiables depuis l'administration (voir §7octies).
+10. **Délais SLA logistiques indicatifs, pas mesurés** (`config('logistics.step_sla_hours')`) et **alertes de dépassement non poussées** (détection interne seulement, faute du module Notifications — Sprint 9) — voir §7nonies.
+11. **Non-conformité qualité sans lien automatique vers une réclamation** : le module Réclamations n'existe pas encore (Sprint 10) ; le rapport de non-conformité est consigné mais n'ouvre rien automatiquement pour l'instant (voir §7nonies).

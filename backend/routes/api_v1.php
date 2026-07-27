@@ -6,11 +6,13 @@ use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\CategoryMappingController;
 use App\Http\Controllers\Admin\DeliveryFeeTierController;
 use App\Http\Controllers\Admin\ExchangeRateController;
+use App\Http\Controllers\Admin\LogisticsController;
 use App\Http\Controllers\Admin\MarginRuleController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductPricePreviewController;
+use App\Http\Controllers\Admin\QualityControlController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BoutiqueController;
 use App\Http\Controllers\CategoryController;
@@ -83,6 +85,12 @@ Route::middleware(['auth:api', 'can:orders.manage_status'])->prefix('admin')->gr
     Route::get('/orders', [AdminOrderController::class, 'index']);
     Route::get('/orders/{order}', [AdminOrderController::class, 'show']);
     Route::patch('/orders/{order}/status', [AdminOrderController::class, 'updateStatus']);
+
+    Route::get('/orders/{order}/quality-control', [QualityControlController::class, 'index']);
+    Route::post('/orders/{order}/items/{orderItem}/quality-control', [QualityControlController::class, 'store']);
+
+    Route::get('/logistics/dashboard', [LogisticsController::class, 'dashboard']);
+    Route::get('/logistics/alerts', [LogisticsController::class, 'alerts']);
 });
 
 Route::middleware(['auth:api', 'can:orders.create_for_client'])->prefix('admin')->group(function () {

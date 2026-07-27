@@ -71,4 +71,5 @@ return [
     'invalid_webhook_signature' => 'Signature de notification invalide.',
     'bankily_payment_instructions' => 'Confirmez le paiement dans votre application Bankily pour finaliser votre commande.',
     'pending_payment_proof_blocks_checkout' => 'Vous avez déjà une preuve de paiement en attente de traitement ; veuillez patienter avant de passer une nouvelle commande.',
+    'order_not_in_quality_control' => 'Cette commande n\'est pas au statut "Contrôle qualité".',
 ];

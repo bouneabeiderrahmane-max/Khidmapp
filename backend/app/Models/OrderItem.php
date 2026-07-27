@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class OrderItem extends Model
 {
@@ -32,5 +33,10 @@ class OrderItem extends Model
     public function boutique(): BelongsTo
     {
         return $this->belongsTo(Boutique::class);
+    }
+
+    public function qualityControlReports(): HasMany
+    {
+        return $this->hasMany(QualityControlReport::class)->orderBy('created_at');
     }
 }

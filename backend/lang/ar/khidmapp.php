@@ -71,4 +71,5 @@ return [
     'invalid_webhook_signature' => 'توقيع الإشعار غير صالح.',
     'bankily_payment_instructions' => 'أكّد الدفع في تطبيق بنكيلي الخاص بك لإتمام طلبك.',
     'pending_payment_proof_blocks_checkout' => 'لديك إثبات دفع قيد المعالجة بالفعل؛ يرجى الانتظار قبل تقديم طلب جديد.',
+    'order_not_in_quality_control' => 'هذا الطلب ليس في حالة "مراقبة الجودة".',
 ];

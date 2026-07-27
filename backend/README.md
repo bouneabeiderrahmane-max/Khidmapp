@@ -103,6 +103,19 @@ Aucun prix EUR, URL ou référence de boutique source n'est jamais exposé sur c
 > - Un client ayant une preuve de paiement manuelle `pending` sur une commande ne peut pas en passer une nouvelle nécessitant un paiement (8.5.3) — commutateur `config('payments.block_new_orders_with_pending_manual_proof')`, pas encore exposé dans une UI de réglages admin (aucun module de ce type n'existe).
 > - Chaque soumission de preuve manuelle crée un nouvel enregistrement `Payment` plutôt que de réécrire le précédent : l'historique complet (refus, demandes de complément, re-soumissions) reste consultable.
 
+## Logistique (Sprint 8)
+
+- `GET /api/v1/admin/logistics/dashboard` — nombre de commandes actives par statut, en temps réel (8.6.2)
+- `GET /api/v1/admin/logistics/alerts` — commandes ayant dépassé le délai indicatif de leur statut courant, triées par ampleur de dépassement décroissante (8.6.2)
+- `GET /api/v1/admin/orders/{id}/quality-control` — historique des rapports de contrôle qualité d'une commande
+- `POST /api/v1/admin/orders/{id}/items/{itemId}/quality-control` — enregistre un rapport de conformité pour un article (8.6.1), réservé au statut « Contrôle qualité », motif obligatoire si non conforme
+
+> **Notes** :
+> - Pas de nouvelle table pour les « 10 étapes » du CDC (8.6) : elles recoupent presque terme à terme les 15 statuts de commande déjà historisés (`order_status_histories`, Sprint 6) — dupliquer cette information dans une table `logistics_events` séparée n'aurait rien apporté.
+> - Les délais indicatifs par statut (`config('logistics.step_sla_hours')`) sont des estimations, pas des données mesurées — le cahier des charges ne fournit de chiffre exact que pour deux étapes très en amont (paiement) et indique explicitement que le délai boutique → Madrid varie « selon boutique » sans cible fixe.
+> - Les alertes de dépassement sont calculées à la demande (aucune table dédiée) et **ne déclenchent aucune notification poussée** — le module Notifications (Sprint 9) n'existe pas encore.
+> - Une non-conformité qualité est consignée mais **n'ouvre pas automatiquement de réclamation** — le module Réclamations (Sprint 10) n'existe pas encore ; le CDC prévoit pourtant cette automatisation (8.6.1).
+
 ## Tests
 
 ```bash
