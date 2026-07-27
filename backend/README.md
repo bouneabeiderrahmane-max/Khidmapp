@@ -68,6 +68,17 @@ Générée automatiquement depuis le code (`dedoc/scramble`) :
 
 Le cas chiffré du CDC (8.3.1 : 29,95 € → 2 057,16 MRU) est vérifié au centime près dans `PricingServiceTest`.
 
+## Catalogue & recherche (Sprint 5)
+
+- `GET /api/v1/products` — recherche publique : `q` (mot-clé), `boutique`/`category` (slug), `color`, `size`, `min_price`/`max_price` (MRU), `sort` (`newest`/`price_asc`/`price_desc`), pagination
+- `GET /api/v1/products/{id}` — fiche produit : images, nom/description bilingues, boutique d'origine, prix final MRU par variante, délai de livraison estimé
+
+Aucun prix EUR, URL ou référence de boutique source n'est jamais exposé sur ces routes.
+
+> **Notes** :
+> - Le filtrage par prix et la recherche par mot-clé (champ JSON bilingue) sont appliqués en mémoire après un premier filtrage SQL, pas entièrement en base — voir le docblock de `App\Services\Catalog\ProductSearchService`. Suffisant pour cette session, à revoir si le catalogue grossit significativement.
+> - Le délai de livraison affiché (`config('catalog.delivery_estimate_days_*')`) est une valeur statique, faute de données logistiques réelles avant le Sprint 8 — ce n'est **pas** une estimation calculée.
+
 ## Tests
 
 ```bash

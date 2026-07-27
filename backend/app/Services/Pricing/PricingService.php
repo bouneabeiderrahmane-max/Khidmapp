@@ -12,6 +12,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Support\MarginScope;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Moteur de calcul de prix (CDC 8.3) : prix boutique (EUR) → conversion
@@ -24,6 +25,8 @@ use Carbon\CarbonImmutable;
  */
 class PricingService
 {
+    private const EXCHANGE_RATE_CACHE_TTL_SECONDS = 300;
+
     public function priceForVariant(ProductVariant $variant, ?string $zone = null): PriceBreakdown
     {
         $variant->loadMissing('product');
@@ -32,13 +35,7 @@ class PricingService
         $basePriceEur = (float) $variant->price_eur;
         $currencyPair = config('pricing.default_currency_pair');
 
-        $rate = ExchangeRate::query()->effectiveAsOf($currencyPair)->first();
-
-        if ($rate === null) {
-            throw MissingExchangeRateException::forPair($currencyPair);
-        }
-
-        $exchangeRate = (float) $rate->rate;
+        $exchangeRate = $this->currentExchangeRate($currencyPair);
         $convertedMru = round($basePriceEur * $exchangeRate, 2);
 
         [$marginPercent, $marginSource] = $this->resolveMarginPercent($variant->product);
@@ -62,6 +59,38 @@ class PricingService
             finalPriceMru: $finalPriceMru,
             computedAt: CarbonImmutable::now(),
         );
+    }
+
+    /**
+     * Le taux de change change rarement (mise à jour manuelle par un
+     * administrateur) mais est lu à chaque calcul de prix — mis en cache
+     * (CDC 10.1 : "cache pour les données à forte fréquence de lecture,
+     * catalogue, taux de change"). Invalidé par
+     * self::forgetExchangeRateCache() dès qu'un nouveau taux est enregistré.
+     */
+    private function currentExchangeRate(string $currencyPair): float
+    {
+        $rate = Cache::remember(
+            self::exchangeRateCacheKey($currencyPair),
+            self::EXCHANGE_RATE_CACHE_TTL_SECONDS,
+            fn () => ExchangeRate::query()->effectiveAsOf($currencyPair)->first()?->rate,
+        );
+
+        if ($rate === null) {
+            throw MissingExchangeRateException::forPair($currencyPair);
+        }
+
+        return (float) $rate;
+    }
+
+    public static function forgetExchangeRateCache(string $currencyPair): void
+    {
+        Cache::forget(self::exchangeRateCacheKey($currencyPair));
+    }
+
+    private static function exchangeRateCacheKey(string $currencyPair): string
+    {
+        return "pricing:exchange_rate:{$currencyPair}";
     }
 
     /**

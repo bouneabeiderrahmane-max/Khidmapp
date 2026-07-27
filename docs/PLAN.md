@@ -158,7 +158,7 @@ Exemple de référence (8.3.1) : 29,95 € × 47,50 MRU/€ = 1 422,63 MRU + 20 
 | 2 | Boutiques | **Fait** (voir §7ter) |
 | 3 | Synchronisation catalogue | **Fait** (voir §7quater) |
 | 4 | Moteur de calcul de prix | **Fait** (voir §7quinquies) |
-| 5 | Catalogue & recherche | À venir |
+| 5 | Catalogue & recherche | **Fait** (voir §7sexies) |
 | 6 | Panier & commande (state machine 15 statuts) | À venir |
 | 7 | Paiements (Bankily + manuel) | À venir |
 | 8 | Logistique (10 étapes, alertes SLA) | À venir |
@@ -246,6 +246,22 @@ Exemple de référence (8.3.1) : 29,95 € × 47,50 MRU/€ = 1 422,63 MRU + 20 
 
 ---
 
+## 7sexies. Sprint 5 — ce qui a été livré
+
+**Recherche & filtres (7.2.2)** : `GET /api/v1/products` — mot-clé (nom fr/ar), boutique (slug), catégorie (slug), couleur, taille (sur variante en stock), fourchette de prix en MRU, tri (`newest` par défaut, `price_asc`, `price_desc`), pagination. Seuls les produits `active` de boutiques `active` apparaissent (règle 8.1.2, déjà en place depuis le Sprint 2).
+
+**Fiche produit détaillée** : `GET /api/v1/products/{id}` — images, nom/description bilingues, boutique d'origine (nom/logo/pays, jamais l'URL source), catégorie, prix final en MRU par variante (calculé via `PricingService`), et un délai de livraison estimé. **Aucun prix EUR ni référence/URL boutique source n'est jamais exposé au client** (section 5 du CDC : le client n'a aucune relation directe avec la boutique) — vérifié explicitement par test.
+
+**Limite technique assumée et documentée** : le prix final dépend de règles de marge/livraison résolues en PHP (pas exprimables en SQL simplement) ; la recherche par mot-clé porte sur un champ JSON bilingue. Les deux sont donc traités en mémoire après un premier filtrage SQL (boutique/catégorie/couleur/taille), plutôt qu'entièrement en base. Largement suffisant pour la taille de catalogue de cette session ; à revoir (ex. dénormaliser un prix final recalculé en base) si le catalogue grossit significativement — documenté dans `ProductSearchService`.
+
+**Délai de livraison** : valeur statique de configuration (`config('catalog.delivery_estimate_days_*')`, 15–25 jours), faute de données logistiques réelles par étape/transporteur (Sprint 8). Signalé explicitement comme un placeholder, pas une estimation calculée.
+
+**Cache** : le taux de change courant est désormais mis en cache Redis (5 min), invalidé immédiatement à l'ajout d'un nouveau taux — conforme à l'architecture décrite en 10.1 du CDC ("cache pour les données à forte fréquence de lecture : catalogue, taux de change").
+
+**Tests** : 12 nouveaux tests (visibilité, recherche, filtres, tri, pagination, non-fuite de prix EUR/URL, fiche produit avec prix par variante, 404 si boutique/produit indisponible) — 95 tests au total, tous verts. Migrations validées sur PostgreSQL réel.
+
+---
+
 ## 8. Points encore ouverts
 
 1. Détail fin des permissions par sous-action au sein de chaque module (la matrice CDC 7.5 est une synthèse ; la granularité complète sera affinée module par module au fil des sprints, avec validation à chaque fois).
@@ -254,3 +270,4 @@ Exemple de référence (8.3.1) : 29,95 € × 47,50 MRU/€ = 1 422,63 MRU + 20 
 4. Upload réel de logo/bannière boutique (actuellement de simples URL) — à raccorder au stockage S3/MinIO si un flux d'upload dédié est souhaité plutôt que de simples liens externes.
 5. **Un vrai `CatalogFetcher` par boutique** (scraping respectueux des CGU ou accord avec les boutiques) et **un vrai `TranslatorGateway`** — non spécifiés par le cahier des charges, à trancher avant mise en production (voir §7quater).
 6. Poids/volume produit non modélisés (choix Sprint 4 : grille de livraison par tranche de prix) — à réévaluer si une grille par poids/volume s'avère nécessaire plus tard (voir §7quinquies).
+7. **Délai de livraison affiché statique** (15–25 jours, non calculé) et **recherche/tri par prix en mémoire plutôt qu'en SQL** — deux limites techniques assumées à revisiter avec de vraies données logistiques (Sprint 8) et/ou un catalogue à plus grande échelle (voir §7sexies).
