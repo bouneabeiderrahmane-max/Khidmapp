@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Cart\CartController;
+use App\Http\Controllers\Complaint\ComplaintAttachmentController;
+use App\Http\Controllers\Complaint\ComplaintController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\Payment\PaymentController;
 use App\Http\Controllers\Profile\AddressController;
@@ -30,3 +32,11 @@ Route::post('/orders/{order}/payment-proof', [PaymentController::class, 'submitP
 Route::get('/notifications', [NotificationController::class, 'index']);
 Route::get('/notification-preferences', [NotificationController::class, 'showPreferences']);
 Route::put('/notification-preferences', [NotificationController::class, 'updatePreferences']);
+
+Route::get('/complaints', [ComplaintController::class, 'index']);
+Route::post('/complaints', [ComplaintController::class, 'store']);
+Route::get('/complaints/{complaint}', [ComplaintController::class, 'show']);
+Route::post('/complaints/{complaint}/messages', [ComplaintController::class, 'storeMessage']);
+
+Route::get('/complaint-messages/{message}/attachments/{index}', [ComplaintAttachmentController::class, 'show'])
+    ->name('complaint-messages.attachment');

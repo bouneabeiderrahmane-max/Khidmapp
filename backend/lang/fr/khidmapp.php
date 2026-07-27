@@ -72,4 +72,22 @@ return [
     'bankily_payment_instructions' => 'Confirmez le paiement dans votre application Bankily pour finaliser votre commande.',
     'pending_payment_proof_blocks_checkout' => 'Vous avez déjà une preuve de paiement en attente de traitement ; veuillez patienter avant de passer une nouvelle commande.',
     'order_not_in_quality_control' => 'Cette commande n\'est pas au statut "Contrôle qualité".',
+    'quality_control_anomaly_complaint_message' => 'Non-conformité détectée automatiquement lors du contrôle qualité de l\'article #:item_id : :notes',
+    'order_not_found' => 'Commande introuvable.',
+    'complaint_message_or_attachment_required' => 'Un message ou une pièce jointe est requis.',
+    'invalid_complaint_transition' => 'Transition de statut de réclamation invalide : ":from" → ":to".',
+    'complaint_category' => [
+        'produit_non_conforme' => 'Produit non conforme',
+        'retard' => 'Retard',
+        'dommage' => 'Dommage',
+        'erreur_facturation' => 'Erreur de facturation',
+        'autre' => 'Autre',
+    ],
+    'complaint_status' => [
+        'ouverte' => 'Ouverte',
+        'en_cours' => 'En cours de traitement',
+        'en_attente_client' => 'En attente client',
+        'resolue' => 'Résolue',
+        'cloturee' => 'Clôturée',
+    ],
 ];

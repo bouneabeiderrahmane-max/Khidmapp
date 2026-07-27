@@ -72,4 +72,22 @@ return [
     'bankily_payment_instructions' => 'أكّد الدفع في تطبيق بنكيلي الخاص بك لإتمام طلبك.',
     'pending_payment_proof_blocks_checkout' => 'لديك إثبات دفع قيد المعالجة بالفعل؛ يرجى الانتظار قبل تقديم طلب جديد.',
     'order_not_in_quality_control' => 'هذا الطلب ليس في حالة "مراقبة الجودة".',
+    'quality_control_anomaly_complaint_message' => 'تم اكتشاف عدم مطابقة تلقائيًا أثناء مراقبة جودة العنصر رقم #:item_id: :notes',
+    'order_not_found' => 'الطلب غير موجود.',
+    'complaint_message_or_attachment_required' => 'يلزم إدخال رسالة أو إرفاق ملف.',
+    'invalid_complaint_transition' => 'انتقال حالة شكوى غير صالح: ":from" → ":to".',
+    'complaint_category' => [
+        'produit_non_conforme' => 'منتج غير مطابق',
+        'retard' => 'تأخير',
+        'dommage' => 'ضرر',
+        'erreur_facturation' => 'خطأ في الفوترة',
+        'autre' => 'أخرى',
+    ],
+    'complaint_status' => [
+        'ouverte' => 'مفتوحة',
+        'en_cours' => 'قيد المعالجة',
+        'en_attente_client' => 'بانتظار العميل',
+        'resolue' => 'تم الحل',
+        'cloturee' => 'مغلقة',
+    ],
 ];

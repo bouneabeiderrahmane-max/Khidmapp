@@ -4,8 +4,10 @@ use App\Http\Controllers\Admin\BoutiqueController as AdminBoutiqueController;
 use App\Http\Controllers\Admin\BoutiqueSyncController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\CategoryMappingController;
+use App\Http\Controllers\Admin\ComplaintController as AdminComplaintController;
 use App\Http\Controllers\Admin\DeliveryFeeTierController;
 use App\Http\Controllers\Admin\ExchangeRateController;
+use App\Http\Controllers\Admin\FaqController as AdminFaqController;
 use App\Http\Controllers\Admin\LogisticsController;
 use App\Http\Controllers\Admin\MarginRuleController;
 use App\Http\Controllers\Admin\NotificationController as AdminNotificationController;
@@ -17,6 +19,7 @@ use App\Http\Controllers\Admin\QualityControlController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BoutiqueController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\FaqController;
 use App\Http\Controllers\Payment\BankilyWebhookController;
 use App\Http\Controllers\ProductController;
 use Illuminate\Http\Request;
@@ -50,6 +53,7 @@ Route::get('/boutiques/{boutique:slug}', [BoutiqueController::class, 'show']);
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{product}', [ProductController::class, 'show']);
+Route::get('/faqs', [FaqController::class, 'index']);
 
 Route::middleware(['auth:api', 'can:boutiques.manage'])->prefix('admin')->group(function () {
     Route::apiResource('boutiques', AdminBoutiqueController::class);
@@ -108,6 +112,17 @@ Route::middleware(['auth:api', 'can:payments.validate_manual'])->prefix('admin')
 
 Route::middleware(['auth:api', 'can:notifications.view'])->prefix('admin')->group(function () {
     Route::get('/notifications', [AdminNotificationController::class, 'index']);
+});
+
+Route::middleware(['auth:api', 'can:complaints.manage'])->prefix('admin')->group(function () {
+    Route::get('/complaints', [AdminComplaintController::class, 'index']);
+    Route::get('/complaints/{complaint}', [AdminComplaintController::class, 'show']);
+    Route::post('/complaints/{complaint}/messages', [AdminComplaintController::class, 'storeMessage']);
+    Route::patch('/complaints/{complaint}/status', [AdminComplaintController::class, 'updateStatus']);
+});
+
+Route::middleware(['auth:api', 'can:content.manage'])->prefix('admin')->group(function () {
+    Route::apiResource('faqs', AdminFaqController::class)->except(['show']);
 });
 
 Route::post('/webhooks/bankily', [BankilyWebhookController::class, 'handle']);

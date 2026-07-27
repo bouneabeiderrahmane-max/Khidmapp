@@ -114,7 +114,7 @@ Aucun prix EUR, URL ou référence de boutique source n'est jamais exposé sur c
 > - Pas de nouvelle table pour les « 10 étapes » du CDC (8.6) : elles recoupent presque terme à terme les 15 statuts de commande déjà historisés (`order_status_histories`, Sprint 6) — dupliquer cette information dans une table `logistics_events` séparée n'aurait rien apporté.
 > - Les délais indicatifs par statut (`config('logistics.step_sla_hours')`) sont des estimations, pas des données mesurées — le cahier des charges ne fournit de chiffre exact que pour deux étapes très en amont (paiement) et indique explicitement que le délai boutique → Madrid varie « selon boutique » sans cible fixe.
 > - Les alertes de dépassement sont calculées à la demande (aucune table dédiée) et **ne déclenchent toujours aucune notification poussée** — `LogisticsAlertService` n'est pas encore relié à `NotificationService` (Sprint 9), cette liaison reste à faire.
-> - Une non-conformité qualité est consignée mais **n'ouvre pas automatiquement de réclamation** — le module Réclamations (Sprint 10) n'existe pas encore ; le CDC prévoit pourtant cette automatisation (8.6.1). Une notification client est en revanche bien envoyée (Sprint 9).
+> - Une non-conformité qualité **ouvre désormais automatiquement une réclamation interne** (8.6.1) en plus de notifier le client — voir Sprint 10 ci-dessous.
 
 ## Notifications (Sprint 9)
 
@@ -130,6 +130,19 @@ Aucun prix EUR, URL ou référence de boutique source n'est jamais exposé sur c
 > - SMS et e-mail sont restreints par gabarit (8.7.1 : SMS pour paiement/livraison uniquement, e-mail pour la confirmation de commande uniquement) ; push est le canal par défaut pour tout gabarit.
 > - Un gabarit critique (paiement validé, annulation, remboursement) est garanti d'atteindre le client par au moins un canal même si tous ses canaux sont désactivés (repli sur push) — sans forcer spécifiquement push si un autre canal reste actif.
 > - Table nommée `notification_logs`, pas `notifications`, pour ne pas entrer en collision avec la relation `notifications()` du trait `Notifiable` de Laravel (présent sur `User` depuis le Sprint 0, jamais utilisé dans ce projet).
+
+## Réclamations & centre d'aide (Sprint 10)
+
+- `GET/POST /api/v1/complaints`, `GET /api/v1/complaints/{id}`, `POST /api/v1/complaints/{id}/messages` — réclamations du client connecté (8.8), rattachées à une commande, catégorisées, fil de discussion avec pièces jointes (5 images max)
+- `GET /api/v1/admin/complaints` (filtrable par `status`/`category`/`user_id`/`order_id`), `POST .../{id}/messages`, `PATCH .../{id}/status` — gestion par le service client/administrateur (permission `complaints.manage`)
+- `GET /api/v1/complaint-messages/{message}/attachments/{index}` — téléchargement d'une pièce jointe, accessible au propriétaire de la réclamation ou à un agent (route partagée, vérification manuelle)
+- `GET /api/v1/faqs` public, CRUD `/api/v1/admin/faqs` (permission `content.manage`) — centre d'aide (8.8)
+
+> **Notes** :
+> - Cycle de statuts confirmé par le CDC (Ouverte/En cours/En attente client/Résolue/Clôturée) mais sans table de transitions explicite comme pour les commandes — une première réponse d'agent sur une réclamation « ouverte » vaut prise en charge (transition automatique vers « en cours ») ; une réponse du client sur une réclamation « en attente client » la remet automatiquement « en cours ». La clôture reste réservée au service client/administrateur.
+> - **Point désormais résolu** : une non-conformité de contrôle qualité (Sprint 8, 8.6.1) ouvre automatiquement une réclamation interne (`ComplaintService::openAutomatically()`, message système sans auteur humain). « L'information du service client » exigée par le CDC est interprétée comme la visibilité dans la file d'attente admin, pas comme une alerte active — aucune liste de diffusion/canal dédié n'existe.
+> - Une réponse d'agent notifie également le client (push, gabarit `complaint_reply`) — extension au-delà des 10 événements listés en 8.7, signalée explicitement.
+> - FAQ réservée à l'administrateur (pas au service client) — le CDC n'attribue ce module à aucun rôle précis ; choix par analogie avec la gestion des boutiques/catégories.
 
 ## Tests
 

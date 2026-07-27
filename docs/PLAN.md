@@ -163,7 +163,7 @@ Exemple de référence (8.3.1) : 29,95 € × 47,50 MRU/€ = 1 422,63 MRU + 20 
 | 7 | Paiements (Bankily + manuel) | **Fait** (voir §7octies) |
 | 8 | Logistique (10 étapes, alertes SLA) | **Fait** (voir §7nonies) |
 | 9 | Notifications (FCM/SMS/e-mail) | **Fait** (voir §7decies) |
-| 10 | Support & réclamations | À venir |
+| 10 | Support & réclamations | **Fait** (voir §7undecies) |
 | 11 | Administration & pilotage (dashboard, exports) | À venir |
 
 ---
@@ -343,6 +343,25 @@ Exemple de référence (8.3.1) : 29,95 € × 47,50 MRU/€ = 1 422,63 MRU + 20 
 
 ---
 
+## 7undecies. Sprint 10 — ce qui a été livré
+
+**Réclamations (8.8)** : `Complaint`/`ComplaintMessage`, rattachées à une commande précise, catégorisées (produit non conforme/retard/dommage/erreur de facturation/autre), fil de discussion avec pièces jointes (images, jusqu'à 5 par message). Cycle de statuts confirmé par le CDC (Ouverte, En cours de traitement, En attente client, Résolue, Clôturée) — le CDC ne fournissant pas de table de transitions comme pour les commandes (8.4), les règles ci-dessous sont une interprétation raisonnable, documentée explicitement :
+- une première réponse d'agent sur une réclamation "ouverte" vaut prise en charge (transition automatique vers "en_cours" — interprétation de 7.3 : "prise en charge, suivi, clôture") ;
+- une réponse du client sur une réclamation "en attente client" la remet automatiquement "en cours" ;
+- la clôture est réservée au service client/administrateur (permission `complaints.manage`, non ouverte au client — le CDC ne le lui accorde pas explicitement, contrairement à l'ouverture et à la messagerie, 7.2.4).
+
+**Endpoints** : côté client, `GET/POST /api/v1/complaints`, `GET /api/v1/complaints/{id}`, `POST /api/v1/complaints/{id}/messages` (isolation stricte par propriétaire) ; côté service client/administrateur, `GET /api/v1/admin/complaints` (filtrable par statut/catégorie/client/commande), `POST .../{id}/messages`, `PATCH .../{id}/status`. Téléchargement des pièces jointes via une route partagée (`GET /api/v1/complaint-messages/{message}/attachments/{index}`) accessible au propriétaire de la réclamation ou à un agent — les deux audiences partagent la même ressource, d'où une vérification manuelle plutôt qu'un middleware `can:` classique.
+
+**Centre d'aide / FAQ (8.8, première puce)** : `GET /api/v1/faqs` public, CRUD admin sous la nouvelle permission `content.manage`. Le CDC n'attribue ce module à aucun rôle précis ; réservé à l'administrateur (pas au service client), par analogie avec la gestion des boutiques/catégories — choix signalé, à confirmer si besoin.
+
+**Point résolu — lien automatique vers une réclamation (8.6.1)** : la non-conformité de contrôle qualité (Sprint 8) ouvre désormais automatiquement une réclamation interne (`ComplaintService::openAutomatically()`, catégorie "produit non conforme", message système sans auteur humain — `complaint_messages.sender_id` rendu nullable pour ce cas, `sender_type = "system"`) — le point ouvert laissé dans les Sprints 8 et 9 est refermé. Le CDC demande aussi "l'information du service client" : interprétée ici comme la visibilité de la réclamation dans la file d'attente admin (`GET /admin/complaints`), pas comme une alerte active — aucun mécanisme de diffusion à toute l'équipe (liste de diffusion, canal dédié) n'existe.
+
+**Extension signalée — notification de réponse agent** : une réponse d'agent sur une réclamation notifie le client (push uniquement, gabarit `complaint_reply`) — ce déclencheur ne fait pas partie des 10 événements listés en 8.7 mais complète naturellement le module Notifications pour ce nouveau flux ; explicitement hors périmètre littéral du CDC.
+
+**Tests** : 31 nouveaux tests (Unit : `ComplaintStatus` — transitions autorisées/rejetées, statut terminal ; `ComplaintService` — ouverture, prise en charge automatique par réponse d'agent, retour "en cours" après réponse client, transitions invalides, ouverture automatique système ; Feature : réclamations client — ouverture avec/sans pièce jointe, isolation, message de suivi, validation message-ou-pièce-jointe —, réclamations admin — permissions, filtre, réponse + notification, transitions valides/invalides —, téléchargement de pièce jointe — propriétaire/agent/étranger —, FAQ publique et admin — permissions, CRUD, bilinguisme obligatoire —, intégration contrôle qualité → réclamation automatique) — 238 tests au total, tous verts. Style Pint conforme. Migrations validées sur PostgreSQL réel (`migrate:fresh` + seed) ; parcours complet vérifié en HTTP réel (ouverture avec photo, réponse d'agent avec notification, résolution, clôture, transition invalide rejetée, anomalie qualité → réclamation automatique visible côté client).
+
+---
+
 ## 8. Points encore ouverts
 
 1. Détail fin des permissions par sous-action au sein de chaque module (la matrice CDC 7.5 est une synthèse ; la granularité complète sera affinée module par module au fil des sprints, avec validation à chaque fois).
@@ -355,6 +374,7 @@ Exemple de référence (8.3.1) : 29,95 € × 47,50 MRU/€ = 1 422,63 MRU + 20 
 8. **Vraie intégration Bankily** : identifiants marchands, format d'API réel, schéma de signature de webhook — tout est à obtenir/spécifier par Bankily avant mise en production ; `StubBankilyGateway` n'est qu'un simulateur local (voir §7octies).
 9. **Commutateur "bloquer une nouvelle commande si preuve en attente" non exposé dans l'UI admin** (8.5.3 prévoit une exception "configuration contraire de l'administrateur") : c'est pour l'instant une valeur de configuration statique, faute d'un module de réglages globaux modifiables depuis l'administration (voir §7octies).
 10. **Délais SLA logistiques indicatifs, pas mesurés** (`config('logistics.step_sla_hours')`) — voir §7nonies.
-11. **Non-conformité qualité sans lien automatique vers une réclamation** : le module Réclamations n'existe pas encore (Sprint 10) ; le rapport de non-conformité est consigné mais n'ouvre rien automatiquement pour l'instant (voir §7nonies).
-12. **Vraie intégration Firebase Cloud Messaging** : aucun projet/identifiants Firebase n'existe ; `LogPushGateway` n'est qu'un simulateur local (voir §7decies).
-13. **Alertes de dépassement de délai (Sprint 8) toujours non poussées au client** : le module Notifications existe désormais, mais `LogisticsAlertService` n'est pas encore relié à `NotificationService` — cette liaison ("notification proactive au client" en cas de dépassement, 8.6.2) reste à faire, faute d'avoir été explicitement redemandée pour ce sprint (voir §7nonies/§7decies).
+11. **Vraie intégration Firebase Cloud Messaging** : aucun projet/identifiants Firebase n'existe ; `LogPushGateway` n'est qu'un simulateur local (voir §7decies).
+12. **Alertes de dépassement de délai (Sprint 8) toujours non poussées au client** : le module Notifications existe désormais, mais `LogisticsAlertService` n'est pas encore relié à `NotificationService` — cette liaison ("notification proactive au client" en cas de dépassement, 8.6.2) reste à faire, faute d'avoir été explicitement redemandée pour ce sprint (voir §7nonies/§7decies).
+13. **"Information du service client" (8.6.1) interprétée comme simple visibilité, pas comme alerte active** : aucun mécanisme de diffusion à toute l'équipe (liste de diffusion, canal dédié) n'existe pour signaler activement une nouvelle réclamation automatique aux agents — ils doivent consulter la file d'attente (voir §7undecies).
+14. **FAQ réservée à l'administrateur, pas au service client** : le CDC n'attribue ce module à aucun rôle précis ; choix par analogie avec la gestion des boutiques/catégories, à confirmer si besoin (voir §7undecies).

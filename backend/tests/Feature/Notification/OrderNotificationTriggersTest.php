@@ -132,6 +132,12 @@ class OrderNotificationTriggersTest extends TestCase
             'user_id' => $this->client->id,
             'template_key' => NotificationTemplate::QUALITY_CONTROL_ANOMALY,
         ]);
+        $this->assertDatabaseHas('complaints', [
+            'order_id' => $order->id,
+            'user_id' => $this->client->id,
+            'category' => 'produit_non_conforme',
+            'status' => 'ouverte',
+        ]);
     }
 
     public function test_a_conforming_quality_control_report_does_not_trigger_a_notification(): void
@@ -154,5 +160,6 @@ class OrderNotificationTriggersTest extends TestCase
             ->assertCreated();
 
         $this->assertSame(0, NotificationLog::query()->where('template_key', NotificationTemplate::QUALITY_CONTROL_ANOMALY)->count());
+        $this->assertDatabaseCount('complaints', 0);
     }
 }

@@ -31,4 +31,12 @@ final class NotificationTemplate
     public const ORDER_CANCELLED = 'order_cancelled';
 
     public const ORDER_REFUNDED = 'order_refunded';
+
+    /**
+     * Extension au-delà des 10 événements listés en 8.7 : une réponse
+     * d'agent sur une réclamation (module 8.8, Sprint 10) prévient le
+     * client qu'il a une réponse à consulter — non critique, push
+     * uniquement (voir config/notifications.php).
+     */
+    public const COMPLAINT_REPLY = 'complaint_reply';
 }

@@ -13,6 +13,7 @@ return [
         'delivered' => 'تم تسليم الطلب',
         'order_cancelled' => 'تم إلغاء الطلب',
         'order_refunded' => 'تم استرداد الطلب',
+        'complaint_reply' => 'رد جديد على شكواك',
     ],
     'body' => [
         'order_confirmed' => 'تم تسجيل طلبك رقم #:order_id بنجاح. المجموع: :total أوقية.',
@@ -26,5 +27,6 @@ return [
         'delivered' => 'تم تسليم طلبك رقم #:order_id. شكرًا لثقتك بنا!',
         'order_cancelled' => 'تم إلغاء طلبك رقم #:order_id.',
         'order_refunded' => 'تم استرداد قيمة طلبك رقم #:order_id.',
+        'complaint_reply' => 'رد فريق خدمة العملاء على شكواك المتعلقة بالطلب رقم #:order_id.',
     ],
 ];

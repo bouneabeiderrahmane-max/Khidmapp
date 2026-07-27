@@ -50,6 +50,21 @@ final class Permissions
      */
     public const NOTIFICATIONS_VIEW = 'notifications.view';
 
+    /**
+     * Prise en charge, suivi, clôture des réclamations (7.3 : "Gestion des
+     * réclamations : prise en charge, suivi, clôture, historique") —
+     * extension naturelle du RBAC granulaire (8.9.6), Sprint 10.
+     */
+    public const COMPLAINTS_MANAGE = 'complaints.manage';
+
+    /**
+     * Gestion du contenu du centre d'aide (FAQ, 8.8). Le CDC n'attribue ce
+     * module à aucun rôle précis ; réservé à l'administrateur par défaut,
+     * comme la gestion des boutiques/catégories, plutôt qu'ouvert au
+     * service client — à confirmer si besoin.
+     */
+    public const CONTENT_MANAGE = 'content.manage';
+
     public static function all(): array
     {
         return [
@@ -63,6 +78,8 @@ final class Permissions
             self::DASHBOARD_VIEW_FULL,
             self::DASHBOARD_VIEW_LIMITED,
             self::NOTIFICATIONS_VIEW,
+            self::COMPLAINTS_MANAGE,
+            self::CONTENT_MANAGE,
         ];
     }
 }

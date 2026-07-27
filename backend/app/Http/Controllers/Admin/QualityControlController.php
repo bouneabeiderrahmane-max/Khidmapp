@@ -8,7 +8,9 @@ use App\Http\Resources\QualityControlReportResource;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\QualityControlReport;
+use App\Services\Complaint\ComplaintService;
 use App\Services\Notification\NotificationService;
+use App\Support\ComplaintCategory;
 use App\Support\NotificationTemplate;
 use App\Support\OrderStatus;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -20,15 +22,15 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
  * un agent Khidmapp (service client/administrateur) faute de rôle 3PL
  * distinct dans le RBAC confirmé (7.1, 3 rôles seulement).
  *
- * Point signalé explicitement : le CDC prévoit qu'une non-conformité
- * ouvre "automatiquement" une réclamation interne. Le module Réclamations
- * n'existe pas encore (Sprint 10) — ce contrôleur se contente donc de
- * consigner le rapport de non-conformité ; le lien automatique vers une
- * réclamation sera câblé quand ce module existera.
+ * Une non-conformité ouvre automatiquement une réclamation interne (8.6.1)
+ * et notifie le client — voir ComplaintService::openAutomatically().
  */
 class QualityControlController extends Controller
 {
-    public function __construct(private readonly NotificationService $notifications) {}
+    public function __construct(
+        private readonly NotificationService $notifications,
+        private readonly ComplaintService $complaints,
+    ) {}
 
     public function index(Order $order): AnonymousResourceCollection
     {
@@ -53,6 +55,12 @@ class QualityControlController extends Controller
         ]);
 
         if (! $report->is_conforme) {
+            $this->complaints->openAutomatically(
+                $order,
+                ComplaintCategory::PRODUIT_NON_CONFORME,
+                __('khidmapp.quality_control_anomaly_complaint_message', ['item_id' => $orderItem->id, 'notes' => (string) $report->notes]),
+            );
+
             $this->notifications->notify($order->user, NotificationTemplate::QUALITY_CONTROL_ANOMALY, ['order_id' => $order->id]);
         }
 

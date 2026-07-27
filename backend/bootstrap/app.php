@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\Complaint\InvalidComplaintTransitionException;
 use App\Exceptions\Order\InvalidOrderTransitionException;
 use App\Exceptions\Order\MissingTransitionNoteException;
 use App\Exceptions\Payment\InvalidPaymentAttemptException;
@@ -56,7 +57,7 @@ return Application::configure(basePath: dirname(__DIR__))
             ], 401);
         });
 
-        $exceptions->render(function (InvalidOrderTransitionException|MissingTransitionNoteException|InvalidPaymentAttemptException $e, Request $request) {
+        $exceptions->render(function (InvalidOrderTransitionException|MissingTransitionNoteException|InvalidPaymentAttemptException|InvalidComplaintTransitionException $e, Request $request) {
             if (! $request->is('api/*')) {
                 return null;
             }
