@@ -20,6 +20,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->api(prepend: [
             SetLocaleFromRequest::class,
         ]);
+
+        // API-only backend: never redirect an unauthenticated request to a
+        // "login" web route (none exists) — always fall through to the
+        // AuthenticationException JSON handler below.
+        $middleware->redirectGuestsTo(fn () => null);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
@@ -43,7 +48,7 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             return response()->json([
-                'message' => __('auth.failed'),
+                'message' => __('khidmapp.unauthenticated'),
             ], 401);
         });
 

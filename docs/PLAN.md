@@ -154,7 +154,7 @@ Exemple de référence (8.3.1) : 29,95 € × 47,50 MRU/€ = 1 422,63 MRU + 20 
 | Sprint | Contenu | Statut |
 |---|---|---|
 | 0 | Socle technique | **Fait** (voir §7) |
-| 1 | Authentification & comptes | À venir |
+| 1 | Authentification & comptes | **Fait** (voir §7bis) |
 | 2 | Boutiques | À venir |
 | 3 | Synchronisation catalogue | À venir |
 | 4 | Moteur de calcul de prix | À venir |
@@ -182,7 +182,24 @@ Exemple de référence (8.3.1) : 29,95 € × 47,50 MRU/€ = 1 422,63 MRU + 20 
 
 ---
 
+## 7bis. Sprint 1 — ce qui a été livré
+
+**Comptes & authentification** : inscription/connexion par téléphone + OTP (code à 6 chiffres, expiration 5 min, verrouillage après 5 essais, invalidation de l'ancien code à chaque nouvelle demande), inscription/connexion par e-mail + mot de passe, JWT access token + refresh (`php-open-source-saver/jwt-auth`), déconnexion (invalidation du token), attribution automatique du rôle `client` à l'inscription (les rôles internes `service_client`/`administrateur` ne sont pas auto-attribuables — réservés à une gestion admin future).
+
+**Profil & adresses** : `GET/PUT/DELETE /api/v1/me` (consultation, modification nom/téléphone/e-mail/langue, désactivation de compte via soft delete + déconnexion), CRUD complet `/api/v1/addresses` avec règle « une seule adresse par défaut » (la première créée l'est automatiquement ; en définir une nouvelle par défaut désactive l'ancienne) et vérification de propriété (403 si un utilisateur tente de modifier l'adresse d'un autre).
+
+**RBAC** : seeder `RolePermissionSeeder` créant les 3 rôles confirmés par le CDC et la matrice de permissions de la section 4, via des constantes (`App\Support\Roles`, `App\Support\Permissions`) plutôt que des chaînes en dur.
+
+**Tests** : 27 tests (Feature + Unit) verts couvrant OTP (génération, vérification, expiration, anti-rejeu, verrouillage), auth e-mail, cycle de vie du token (refresh/logout/route protégée), profil et adresses (y compris l'isolation entre utilisateurs). Style Pint conforme. Migrations validées sur PostgreSQL réel.
+
+**Traductions** : nouveau fichier applicatif `lang/{fr,ar}/khidmapp.php` pour les messages métier (OTP envoyé/invalide, échec de connexion, non-authentifié, etc.) — distinct des fichiers `validation`/`auth` officiels de Laravel-Lang.
+
+**Point signalé explicitement** : l'envoi réel du SMS n'est **pas implémenté** — le cahier des charges ne précise pas d'opérateur pour la Mauritanie. `App\Services\Sms\LogSmsGateway` (derrière l'interface `App\Contracts\SmsGateway`) se contente d'écrire le code dans les logs. À remplacer par une vraie intégration dès qu'un opérateur SMS est choisi.
+
+---
+
 ## 8. Points encore ouverts
 
-1. Précédence exacte marge boutique vs marge catégorie en cas de définition simultanée sur un même produit (règle par défaut retenue : catégorie > boutique > global).
+1. Précédence exacte marge boutique vs marge catégorie en cas de définition simultanée sur un même produit (règle par défaut retenue : catégorie > boutique > global) — Sprint 4.
 2. Détail fin des permissions par sous-action au sein de chaque module (la matrice CDC 7.5 est une synthèse ; la granularité complète sera affinée module par module au fil des sprints, avec validation à chaque fois).
+3. **Opérateur SMS pour l'envoi réel des OTP** : non précisé par le cahier des charges — à trancher avant mise en production (voir §7bis).

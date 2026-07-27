@@ -21,7 +21,7 @@ docker compose up -d
 
 # Backend
 cd backend && cp .env.example .env && composer install
-php artisan key:generate && php artisan jwt:secret && php artisan migrate
+php artisan key:generate && php artisan jwt:secret && php artisan migrate && php artisan db:seed
 php artisan serve
 
 # Admin
@@ -37,4 +37,7 @@ cd mobile && flutter pub get && flutter gen-l10n && flutter run
 
 ## Statut du projet
 
-Sprint 0 (socle technique) terminé : backend Laravel (JWT, RBAC, i18n FR/AR, OpenAPI), admin React (i18n/RTL vérifié), mobile Flutter (i18n/RTL, routing), Docker Compose, CI GitHub Actions pour les trois applications. Voir `docs/PLAN.md` section 7 pour le détail, et section 8 pour les points encore ouverts avant d'attaquer le Sprint 1.
+- **Sprint 0** (socle technique) : terminé — backend Laravel (JWT, RBAC, i18n FR/AR, OpenAPI), admin React (i18n/RTL vérifié), mobile Flutter (i18n/RTL, routing), Docker Compose, CI GitHub Actions pour les trois applications.
+- **Sprint 1** (authentification & comptes) : terminé — OTP téléphone, e-mail/mot de passe, JWT + refresh, profil, adresses multiples, rôles (client/service_client/administrateur), 27 tests verts.
+
+Voir `docs/PLAN.md` section 7/7bis pour le détail de chaque sprint livré, et section 8 pour les points encore ouverts (précédence des marges, granularité fine des permissions, opérateur SMS à choisir) avant le Sprint 2.
