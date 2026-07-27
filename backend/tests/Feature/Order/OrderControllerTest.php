@@ -8,10 +8,13 @@ use App\Models\DeliveryFeeTier;
 use App\Models\ExchangeRate;
 use App\Models\MarginRule;
 use App\Models\Order;
+use App\Models\Payment;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
 use App\Support\OrderStatus;
+use App\Support\PaymentMethod;
+use App\Support\PaymentStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -145,5 +148,47 @@ class OrderControllerTest extends TestCase
         $this->actingAs($stranger, 'api')
             ->postJson("/api/v1/orders/{$order->id}/cancel")
             ->assertForbidden();
+    }
+
+    public function test_checkout_is_blocked_while_a_manual_payment_proof_is_pending(): void
+    {
+        $existingOrder = Order::query()->create([
+            'user_id' => $this->client->id, 'status' => OrderStatus::AWAITING_PAYMENT, 'payment_method' => 'manual',
+            'subtotal_eur' => 10, 'exchange_rate_snapshot' => 10, 'subtotal_mru' => 100,
+            'delivery_fee_snapshot_mru' => 200, 'total_mru' => 300,
+        ]);
+        Payment::query()->create([
+            'order_id' => $existingOrder->id, 'submitted_by' => $this->client->id, 'method' => PaymentMethod::MANUAL,
+            'status' => PaymentStatus::PENDING, 'amount_mru' => 300, 'proof_file_path' => 'payment-proofs/x.jpg', 'initiated_at' => now(),
+        ]);
+
+        $variant = $this->variant();
+        $cart = Cart::query()->create(['user_id' => $this->client->id]);
+        $cart->items()->create(['product_variant_id' => $variant->id, 'quantity' => 1]);
+
+        $this->actingAs($this->client, 'api')
+            ->postJson('/api/v1/orders', ['address_id' => $this->addressId(), 'payment_method' => 'bankily'])
+            ->assertStatus(422);
+    }
+
+    public function test_checkout_succeeds_once_the_pending_proof_has_been_reviewed(): void
+    {
+        $existingOrder = Order::query()->create([
+            'user_id' => $this->client->id, 'status' => OrderStatus::AWAITING_PAYMENT, 'payment_method' => 'manual',
+            'subtotal_eur' => 10, 'exchange_rate_snapshot' => 10, 'subtotal_mru' => 100,
+            'delivery_fee_snapshot_mru' => 200, 'total_mru' => 300,
+        ]);
+        Payment::query()->create([
+            'order_id' => $existingOrder->id, 'submitted_by' => $this->client->id, 'method' => PaymentMethod::MANUAL,
+            'status' => PaymentStatus::REJECTED, 'amount_mru' => 300, 'proof_file_path' => 'payment-proofs/x.jpg', 'initiated_at' => now(),
+        ]);
+
+        $variant = $this->variant();
+        $cart = Cart::query()->create(['user_id' => $this->client->id]);
+        $cart->items()->create(['product_variant_id' => $variant->id, 'quantity' => 1]);
+
+        $this->actingAs($this->client, 'api')
+            ->postJson('/api/v1/orders', ['address_id' => $this->addressId(), 'payment_method' => 'bankily'])
+            ->assertCreated();
     }
 }

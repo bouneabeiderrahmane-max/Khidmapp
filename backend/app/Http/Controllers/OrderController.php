@@ -8,10 +8,13 @@ use App\Http\Resources\OrderResource;
 use App\Models\Address;
 use App\Models\Cart;
 use App\Models\Order;
+use App\Models\Payment;
 use App\Services\Order\OrderStatusTransitioner;
 use App\Services\Pricing\CartPricingCalculator;
 use App\Support\OrderActorType;
 use App\Support\OrderStatus;
+use App\Support\PaymentMethod;
+use App\Support\PaymentStatus;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -38,7 +41,7 @@ class OrderController extends Controller
     {
         $this->authorizeOwnership($request, $order);
 
-        return new OrderResource($order->load(['items', 'statusHistories']));
+        return new OrderResource($order->load(['items', 'statusHistories', 'payments']));
     }
 
     /**
@@ -51,6 +54,16 @@ class OrderController extends Controller
         $items = $cart?->items ?? collect();
 
         abort_if($items->isEmpty(), 422, __('khidmapp.cart_empty'));
+
+        if (config('payments.block_new_orders_with_pending_manual_proof')) {
+            $hasPendingProof = Payment::query()
+                ->where('method', PaymentMethod::MANUAL)
+                ->where('status', PaymentStatus::PENDING)
+                ->whereHas('order', fn ($q) => $q->where('user_id', $request->user()->id))
+                ->exists();
+
+            abort_if($hasPendingProof, 422, __('khidmapp.pending_payment_proof_blocks_checkout'));
+        }
 
         $address = Address::query()->findOrFail($request->integer('address_id'));
         $totals = $this->calculator->calculate($items);
@@ -103,7 +116,7 @@ class OrderController extends Controller
             return $order;
         });
 
-        return (new OrderResource($order->load(['items', 'statusHistories'])))->response()->setStatusCode(201);
+        return (new OrderResource($order->load(['items', 'statusHistories', 'payments'])))->response()->setStatusCode(201);
     }
 
     /**
@@ -124,7 +137,7 @@ class OrderController extends Controller
             $request->input('reason'),
         );
 
-        return new OrderResource($order->load(['items', 'statusHistories']));
+        return new OrderResource($order->load(['items', 'statusHistories', 'payments']));
     }
 
     private function authorizeOwnership(Request $request, Order $order): void

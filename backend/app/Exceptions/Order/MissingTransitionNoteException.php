@@ -12,11 +12,11 @@ class MissingTransitionNoteException extends RuntimeException
 {
     public static function forRefund(): self
     {
-        return new self('Un motif est obligatoire pour passer une commande au statut "Remboursé".');
+        return new self(__('khidmapp.transition_note_required_refund'));
     }
 
     public static function forLateCancellation(): self
     {
-        return new self('Un motif est obligatoire pour annuler cette commande au-delà de la fenêtre d\'annulation gratuite.');
+        return new self(__('khidmapp.transition_note_required_late_cancellation'));
     }
 }

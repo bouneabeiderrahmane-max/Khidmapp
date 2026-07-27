@@ -2,6 +2,8 @@
 
 use App\Exceptions\Order\InvalidOrderTransitionException;
 use App\Exceptions\Order\MissingTransitionNoteException;
+use App\Exceptions\Payment\InvalidPaymentAttemptException;
+use App\Exceptions\Payment\InvalidWebhookSignatureException;
 use App\Http\Middleware\SetLocaleFromRequest;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
@@ -54,12 +56,20 @@ return Application::configure(basePath: dirname(__DIR__))
             ], 401);
         });
 
-        $exceptions->render(function (InvalidOrderTransitionException|MissingTransitionNoteException $e, Request $request) {
+        $exceptions->render(function (InvalidOrderTransitionException|MissingTransitionNoteException|InvalidPaymentAttemptException $e, Request $request) {
             if (! $request->is('api/*')) {
                 return null;
             }
 
             return response()->json(['message' => $e->getMessage()], 422);
+        });
+
+        $exceptions->render(function (InvalidWebhookSignatureException $e, Request $request) {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            return response()->json(['message' => $e->getMessage()], 401);
         });
 
         $exceptions->render(function (HttpExceptionInterface $e, Request $request) {

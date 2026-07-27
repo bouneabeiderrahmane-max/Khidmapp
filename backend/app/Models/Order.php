@@ -51,6 +51,11 @@ class Order extends Model
         return $this->hasMany(OrderStatusHistory::class)->orderBy('created_at');
     }
 
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class)->orderBy('created_at');
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->whereNotIn('status', [OrderStatus::DELIVERED, OrderStatus::CANCELLED, OrderStatus::REFUNDED]);

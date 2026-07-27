@@ -160,7 +160,7 @@ Exemple de référence (8.3.1) : 29,95 € × 47,50 MRU/€ = 1 422,63 MRU + 20 
 | 4 | Moteur de calcul de prix | **Fait** (voir §7quinquies) |
 | 5 | Catalogue & recherche | **Fait** (voir §7sexies) |
 | 6 | Panier & commande (state machine 15 statuts) | **Fait** (voir §7septies) |
-| 7 | Paiements (Bankily + manuel) | À venir |
+| 7 | Paiements (Bankily + manuel) | **Fait** (voir §7octies) |
 | 8 | Logistique (10 étapes, alertes SLA) | À venir |
 | 9 | Notifications (FCM/SMS/e-mail) | À venir |
 | 10 | Support & réclamations | À venir |
@@ -284,6 +284,27 @@ Exemple de référence (8.3.1) : 29,95 € × 47,50 MRU/€ = 1 422,63 MRU + 20 
 
 ---
 
+## 7octies. Sprint 7 — ce qui a été livré
+
+**Modèle unifié `payments`** : une seule table pour les deux modes (`method` = `bankily`/`manual`), conçue extensible (8.5.3) — chaque tentative crée un nouvel enregistrement (jamais réécrit après un statut terminal), ce qui conserve l'historique complet des échanges même après plusieurs preuves manuelles refusées/re-soumises pour une même commande.
+
+**Paiement automatique Bankily (8.5.1)** : `POST /api/v1/orders/{id}/payments/bankily/initiate` crée (ou réutilise, si un paiement est déjà `pending` pour cette commande — idempotence) une transaction via `BankilyGateway` et retourne une référence + des instructions. La confirmation arrive de façon asynchrone via `POST /api/v1/webhooks/bankily`, qui transitionne automatiquement la commande vers "Paiement validé" (acteur `system`) sans intervention manuelle, comme l'exige le CDC. Le webhook est idempotent (une notification rejouée sur un paiement déjà terminal ne retraite rien) et ne réactive jamais une commande qui a quitté "Paiement en attente" entre-temps (ex. annulée par le client avant la confirmation).
+
+**Paiement manuel (8.5.2)** : `POST /api/v1/orders/{id}/payment-proof` (upload d'une image, 5 Mo max) crée un enregistrement `pending`. Le service client/administrateur (permission `payments.validate_manual`, déjà prévue dans la matrice confirmée §4) consulte la file (`GET /api/v1/admin/payments/manual`), télécharge la preuve (`GET .../{id}/proof`, agnostique du disque de stockage — fonctionne aussi bien avec le disque `local` de cet environnement qu'avec S3/MinIO en production), puis valide (transitionne la commande vers "Paiement validé"), refuse (motif obligatoire, la commande reste "Paiement en attente", le client peut resoumettre une nouvelle preuve corrigée) ou demande un complément (note obligatoire, statut `info_requested`, commande inchangée).
+
+**Règle transverse (8.5.3)** : un client ayant une preuve de paiement manuelle encore `pending` sur une de ses commandes ne peut pas en passer une nouvelle nécessitant un paiement (`khidmapp.pending_payment_proof_blocks_checkout`) — vérifié dans `OrderController::store()`. Le CDC prévoit une exception "configuration contraire de l'administrateur" : faute d'un module de réglages globaux modifiables depuis l'admin (aucun n'existe encore dans le projet), ce commutateur est pour l'instant `config('payments.block_new_orders_with_pending_manual_proof')`, pas un réglage exposé dans l'UI — voir §8.
+
+**Point signalé explicitement — Bankily non fonctionnel** : le cahier des charges confirme Bankily comme moyen de paiement automatique mais ne fournit ni identifiants, ni format de requête/réponse, ni schéma de signature de webhook. `App\Services\Payment\StubBankilyGateway` génère une référence locale sans aucun appel réseau, et la protection du webhook (`X-Bankily-Signature`) est un simple partage de secret de développement (`BANKILY_WEBHOOK_SECRET`) en attendant le vrai mécanisme Bankily. **Ce n'est pas une intégration Bankily fonctionnelle** — à remplacer dès l'obtention d'un accès marchand réel (le contrat `BankilyGateway` est prêt à recevoir une vraie implémentation, comme pour `CatalogFetcher`/`SmsGateway`/`TranslatorGateway`).
+
+**Corrections incidentes détectées pendant ce sprint** :
+- Les exceptions de transition de commande (`InvalidOrderTransitionException`, `MissingTransitionNoteException`, introduites au Sprint 6) renvoyaient un message français codé en dur, jamais traduit en arabe malgré l'exigence bilingue FR/AR du projet — corrigé en les faisant passer par `lang/{fr,ar}/khidmapp.php` comme toutes les autres exceptions métier, avant de répliquer ce même défaut sur les nouvelles exceptions de paiement.
+- Le message d'erreur "mode de paiement incorrect" était ambigu à la relecture manuelle ("cette commande utilise un autre mode de paiement (Bankily)" pouvait se lire comme "elle utilise déjà Bankily") — reformulé en "cette action nécessite le mode de paiement :method pour cette commande".
+- Petite duplication éliminée : la déduction du type d'acteur (`administrateur` vs `service_client`) à partir du rôle de l'agent connecté, dupliquée entre `Admin\OrderController` et le nouveau contrôleur de paiements, a été centralisée dans `OrderActorType::forAgent()`.
+
+**Tests** : 34 nouveaux tests (Unit : `BankilyPaymentService` — initiation, idempotence, webhook succès/échec, rejeu idempotent, non-réactivation d'une commande sortie de "en attente" —, `ManualPaymentReviewer` — soumission, validation, refus, demande de complément, ré-soumission après refus, double revue bloquée ; Feature : endpoints client — initiation Bankily, soumission de preuve, isolation entre utilisateurs —, webhook — signature invalide/valide/référence inconnue —, revue admin — permissions par rôle, file d'attente, téléchargement de la preuve, validation/refus/complément —, blocage du passage de commande) — 173 tests au total, tous verts. Style Pint conforme. Migrations validées sur PostgreSQL réel (`migrate:fresh` + seed) ; vérification manuelle bout-en-bout des deux parcours de paiement complets (Bankily et manuel, y compris cycle refus → complément demandé → re-soumission → validation) effectuée en HTTP réel avant de considérer le sprint terminé.
+
+---
+
 ## 8. Points encore ouverts
 
 1. Détail fin des permissions par sous-action au sein de chaque module (la matrice CDC 7.5 est une synthèse ; la granularité complète sera affinée module par module au fil des sprints, avec validation à chaque fois).
@@ -292,4 +313,6 @@ Exemple de référence (8.3.1) : 29,95 € × 47,50 MRU/€ = 1 422,63 MRU + 20 
 4. **Un vrai `CatalogFetcher` par boutique** (scraping respectueux des CGU ou accord avec les boutiques) et **un vrai `TranslatorGateway`** — non spécifiés par le cahier des charges, à trancher avant mise en production (voir §7quater).
 5. Poids/volume produit non modélisés (choix Sprint 4 : grille de livraison par tranche de prix) — à réévaluer si une grille par poids/volume s'avère nécessaire plus tard (voir §7quinquies).
 6. **Délai de livraison affiché statique** (15–25 jours, non calculé) et **recherche/tri par prix en mémoire plutôt qu'en SQL** — deux limites techniques assumées à revisiter avec de vraies données logistiques (Sprint 8) et/ou un catalogue à plus grande échelle (voir §7sexies).
-7. **Frais d'annulation tardive marqués mais jamais prélevés** (`cancellation_fee_applicable = true`) : aucun montant ni mécanisme de prélèvement réel n'existe avant l'intégration du paiement (Sprint 7) — pour l'instant, la commande est juste signalée au service client pour traitement manuel (voir §7septies).
+7. **Frais d'annulation tardive marqués mais jamais prélevés** (`cancellation_fee_applicable = true`) : la validation d'un paiement Bankily/manuel confirme la commande, mais aucun mécanisme de prélèvement de frais d'annulation tardive n'existe — la commande est juste signalée au service client pour traitement manuel (voir §7septies).
+8. **Vraie intégration Bankily** : identifiants marchands, format d'API réel, schéma de signature de webhook — tout est à obtenir/spécifier par Bankily avant mise en production ; `StubBankilyGateway` n'est qu'un simulateur local (voir §7octies).
+9. **Commutateur "bloquer une nouvelle commande si preuve en attente" non exposé dans l'UI admin** (8.5.3 prévoit une exception "configuration contraire de l'administrateur") : c'est pour l'instant une valeur de configuration statique, faute d'un module de réglages globaux modifiables depuis l'administration (voir §7octies).

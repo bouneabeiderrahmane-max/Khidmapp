@@ -89,7 +89,19 @@ Aucun prix EUR, URL ou référence de boutique source n'est jamais exposé sur c
 > **Notes** :
 > - « Brouillon » (premier statut du CDC 8.4) n'est jamais atteint par le parcours normal : le panier joue déjà ce rôle avant le passage de commande, qui démarre directement à `paiement_en_attente`. Voir `App\Support\OrderStatus` et `docs/PLAN.md` §7septies.
 > - Les frais de livraison sont calculés **une seule fois** sur le sous-total agrégé du panier/de la commande (`App\Services\Pricing\CartPricingCalculator`), jamais sommés ligne par ligne (8.6).
-> - Une annulation au-delà de la fenêtre gratuite est marquée `cancellation_fee_applicable = true` mais **aucun montant n'est réellement prélevé** — le paiement n'est pas encore intégré (Sprint 7) ; la commande est simplement signalée pour traitement manuel par le service client.
+> - Une annulation au-delà de la fenêtre gratuite est marquée `cancellation_fee_applicable = true` mais **aucun montant n'est réellement prélevé**, faute de mécanisme de prélèvement (voir Sprint 7 ci-dessous) ; la commande est simplement signalée pour traitement manuel par le service client.
+
+## Paiements (Sprint 7)
+
+- `POST /api/v1/orders/{id}/payments/bankily/initiate` — initie un paiement Bankily (idempotent : réutilise une transaction déjà `pending`)
+- `POST /api/v1/orders/{id}/payment-proof` — soumet une preuve de paiement manuel (image, 5 Mo max)
+- `POST /api/v1/webhooks/bankily` — point d'entrée public pour la confirmation Bankily (en-tête `X-Bankily-Signature`), transitionne automatiquement la commande vers « Paiement validé »
+- `GET /api/v1/admin/payments/manual` (filtrable par `status`), `GET .../{id}/proof` (téléchargement de la preuve), `POST .../{id}/validate`, `POST .../{id}/reject` (motif obligatoire), `POST .../{id}/request-info` (note obligatoire) — revue des paiements manuels (permission `payments.validate_manual`)
+
+> **Notes** :
+> - `App\Services\Payment\StubBankilyGateway` **n'est pas une intégration Bankily fonctionnelle** — le cahier des charges ne fournit ni identifiants, ni format d'API, ni schéma de signature de webhook réel. Le placeholder génère une référence locale sans appel réseau ; la protection du webhook est un simple secret partagé de développement (`BANKILY_WEBHOOK_SECRET`). À remplacer dès l'obtention d'un accès marchand Bankily réel (le contrat `App\Contracts\BankilyGateway` est prêt).
+> - Un client ayant une preuve de paiement manuelle `pending` sur une commande ne peut pas en passer une nouvelle nécessitant un paiement (8.5.3) — commutateur `config('payments.block_new_orders_with_pending_manual_proof')`, pas encore exposé dans une UI de réglages admin (aucun module de ce type n'existe).
+> - Chaque soumission de preuve manuelle crée un nouvel enregistrement `Payment` plutôt que de réécrire le précédent : l'historique complet (refus, demandes de complément, re-soumissions) reste consultable.
 
 ## Tests
 

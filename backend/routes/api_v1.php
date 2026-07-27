@@ -8,11 +8,13 @@ use App\Http\Controllers\Admin\DeliveryFeeTierController;
 use App\Http\Controllers\Admin\ExchangeRateController;
 use App\Http\Controllers\Admin\MarginRuleController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductPricePreviewController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BoutiqueController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\Payment\BankilyWebhookController;
 use App\Http\Controllers\ProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -86,3 +88,13 @@ Route::middleware(['auth:api', 'can:orders.manage_status'])->prefix('admin')->gr
 Route::middleware(['auth:api', 'can:orders.create_for_client'])->prefix('admin')->group(function () {
     Route::post('/orders', [AdminOrderController::class, 'store']);
 });
+
+Route::middleware(['auth:api', 'can:payments.validate_manual'])->prefix('admin')->group(function () {
+    Route::get('/payments/manual', [AdminPaymentController::class, 'index']);
+    Route::get('/payments/{payment}/proof', [AdminPaymentController::class, 'proof'])->name('admin.payments.proof');
+    Route::post('/payments/{payment}/validate', [AdminPaymentController::class, 'validatePayment']);
+    Route::post('/payments/{payment}/reject', [AdminPaymentController::class, 'reject']);
+    Route::post('/payments/{payment}/request-info', [AdminPaymentController::class, 'requestInfo']);
+});
+
+Route::post('/webhooks/bankily', [BankilyWebhookController::class, 'handle']);

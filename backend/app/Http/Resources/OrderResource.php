@@ -34,6 +34,7 @@ class OrderResource extends JsonResource
             'refund_reason' => $this->refund_reason,
             'items' => OrderItemResource::collection($this->whenLoaded('items')),
             'status_history' => OrderStatusHistoryResource::collection($this->whenLoaded('statusHistories')),
+            'payments' => PaymentResource::collection($this->whenLoaded('payments')),
             'created_at' => $this->created_at,
         ];
     }

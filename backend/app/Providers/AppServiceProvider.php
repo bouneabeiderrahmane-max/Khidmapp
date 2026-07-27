@@ -2,11 +2,13 @@
 
 namespace App\Providers;
 
+use App\Contracts\BankilyGateway;
 use App\Contracts\CatalogFetcher;
 use App\Contracts\SmsGateway;
 use App\Contracts\TranslatorGateway;
 use App\Services\Catalog\PassthroughTranslator;
 use App\Services\Catalog\StubCatalogFetcher;
+use App\Services\Payment\StubBankilyGateway;
 use App\Services\Sms\LogSmsGateway;
 use Illuminate\Support\ServiceProvider;
 
@@ -20,6 +22,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(SmsGateway::class, LogSmsGateway::class);
         $this->app->bind(CatalogFetcher::class, StubCatalogFetcher::class);
         $this->app->bind(TranslatorGateway::class, PassthroughTranslator::class);
+        $this->app->bind(BankilyGateway::class, StubBankilyGateway::class);
     }
 
     /**

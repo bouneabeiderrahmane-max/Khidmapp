@@ -10,12 +10,10 @@ use App\Models\Address;
 use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\ProductVariant;
-use App\Models\User;
 use App\Services\Order\OrderStatusTransitioner;
 use App\Services\Pricing\CartPricingCalculator;
 use App\Support\OrderActorType;
 use App\Support\OrderStatus;
-use App\Support\Roles;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -50,7 +48,7 @@ class OrderController extends Controller
 
     public function show(Order $order): OrderResource
     {
-        return new OrderResource($order->load(['items', 'statusHistories', 'user']));
+        return new OrderResource($order->load(['items', 'statusHistories', 'payments', 'user']));
     }
 
     /**
@@ -62,12 +60,12 @@ class OrderController extends Controller
         $order = $this->transitioner->transition(
             $order,
             $request->string('status')->toString(),
-            $this->actorTypeFor($request->user()),
+            OrderActorType::forAgent($request->user()),
             $request->user()->id,
             $request->input('note'),
         );
 
-        return new OrderResource($order->load(['items', 'statusHistories']));
+        return new OrderResource($order->load(['items', 'statusHistories', 'payments']));
     }
 
     /**
@@ -127,7 +125,7 @@ class OrderController extends Controller
             $order->statusHistories()->create([
                 'from_status' => null,
                 'to_status' => OrderStatus::AWAITING_PAYMENT,
-                'actor_type' => $this->actorTypeFor($request->user()),
+                'actor_type' => OrderActorType::forAgent($request->user()),
                 'actor_id' => $request->user()->id,
                 'note' => 'Commande manuelle créée pour le compte du client.',
             ]);
@@ -135,11 +133,6 @@ class OrderController extends Controller
             return $order;
         });
 
-        return (new OrderResource($order->load(['items', 'statusHistories'])))->response()->setStatusCode(201);
-    }
-
-    private function actorTypeFor(User $user): string
-    {
-        return $user->hasRole(Roles::ADMINISTRATEUR) ? OrderActorType::ADMINISTRATEUR : OrderActorType::SERVICE_CLIENT;
+        return (new OrderResource($order->load(['items', 'statusHistories', 'payments'])))->response()->setStatusCode(201);
     }
 }
