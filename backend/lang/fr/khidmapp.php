@@ -16,4 +16,16 @@ return [
         'en_test' => 'En test',
     ],
     'boutique_deletion_blocked' => 'Cette boutique ne peut pas être supprimée : une commande active y est associée.',
+    'category_has_children' => 'Cette catégorie ne peut pas être supprimée : elle a des sous-catégories.',
+    'category_has_products' => 'Cette catégorie ne peut pas être supprimée : des produits y sont rattachés.',
+    'product_status' => [
+        'active' => 'Disponible',
+        'indisponible' => 'Indisponible',
+        'discontinued' => 'Retiré du catalogue',
+    ],
+    'sync_status' => [
+        'running' => 'En cours',
+        'success' => 'Réussie',
+        'failed' => 'Échouée',
+    ],
 ];

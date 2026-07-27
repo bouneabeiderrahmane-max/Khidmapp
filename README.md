@@ -39,6 +39,7 @@ cd mobile && flutter pub get && flutter gen-l10n && flutter run
 
 - **Sprint 0** (socle technique) : terminé — backend Laravel (JWT, RBAC, i18n FR/AR, OpenAPI), admin React (i18n/RTL vérifié), mobile Flutter (i18n/RTL, routing), Docker Compose, CI GitHub Actions pour les trois applications.
 - **Sprint 1** (authentification & comptes) : terminé — OTP téléphone, e-mail/mot de passe, JWT + refresh, profil, adresses multiples, rôles (client/service_client/administrateur).
-- **Sprint 2** (boutiques) : terminé — CRUD admin, statuts (Active/Inactive/En pause/En test), catalogue public filtré, 8 boutiques de référence seedées. 40 tests verts au total.
+- **Sprint 2** (boutiques) : terminé — CRUD admin, statuts (Active/Inactive/En pause/En test), catalogue public filtré, 8 boutiques de référence seedées.
+- **Sprint 3** (synchronisation catalogue) : terminé — moteur de synchro (upsert produits/variantes, détection d'anomalies, délai de grâce configurable, préservation du catalogue en cas d'échec), mapping de catégories, correction manuelle des traductions (verrouillée contre les resynchronisations), job Redis + planificateur par fréquence de boutique. 61 tests verts au total.
 
-Voir `docs/PLAN.md` section 7/7bis/7ter pour le détail de chaque sprint livré, et section 8 pour les points encore ouverts (précédence des marges, granularité fine des permissions, opérateur SMS à choisir, règle de suppression boutique à finaliser au Sprint 6) avant le Sprint 3.
+Voir `docs/PLAN.md` section 7/7bis/7ter/7quater pour le détail de chaque sprint livré, et section 8 pour les points encore ouverts (précédence des marges, granularité fine des permissions, opérateur SMS à choisir, règle de suppression boutique à finaliser au Sprint 6, **connecteur de synchronisation réel et service de traduction à choisir avant mise en production**) avant le Sprint 4.

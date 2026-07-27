@@ -46,6 +46,19 @@ Générée automatiquement depuis le code (`dedoc/scramble`) :
 
 > **Note** : `Boutique::canBeDeleted()` retourne toujours `true` pour l'instant — la règle « pas de suppression si commande active » ne peut pas encore être appliquée, le modèle Commande arrivant au Sprint 6.
 
+## Synchronisation catalogue (Sprint 3)
+
+- `POST /api/v1/admin/boutiques/{id}/sync` — déclenche une synchronisation immédiate (mise en file d'attente Redis)
+- `GET /api/v1/admin/boutiques/{id}/sync-logs` — journal de synchronisation (8.2.3)
+- `GET/POST/PUT/DELETE /api/v1/admin/categories`, `GET /api/v1/categories` (public)
+- `GET/PUT /api/v1/admin/boutiques/{id}/category-mappings[/{id}]` — mapping catégorie source → catégorie unifiée
+- `GET/PUT /api/v1/admin/products[/{id}]` — correction manuelle des traductions (verrouille le champ contre les prochaines synchros)
+- `php artisan catalog:sync {boutique?}` — déclenche en CLI ; un planificateur horaire synchronise automatiquement chaque boutique selon sa fréquence configurée (`sync_config.frequency_hours`)
+
+> **Notes** :
+> - `App\Services\Catalog\StubCatalogFetcher` **n'est pas un scraper réel** — le cahier des charges confirme qu'aucune boutique ne fournit d'API officielle et que la récupération devra respecter les CGU de chaque site ; ce travail (un connecteur par boutique) reste à faire. Le placeholder génère des produits fictifs pour que le moteur de synchro soit développé et testé.
+> - `App\Services\Catalog\PassthroughTranslator` **ne traduit rien** (recopie le texte source) — aucun service de traduction n'est précisé par le cahier des charges. La correction manuelle via `PUT /api/v1/admin/products/{id}` est pleinement fonctionnelle et prioritaire sur la traduction automatique.
+
 ## Tests
 
 ```bash

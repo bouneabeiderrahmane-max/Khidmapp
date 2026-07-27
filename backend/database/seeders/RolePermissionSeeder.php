@@ -41,6 +41,7 @@ class RolePermissionSeeder extends Seeder
             Permissions::PAYMENTS_VALIDATE_MANUAL,
             Permissions::PRICING_MANAGE_MARGIN,
             Permissions::BOUTIQUES_MANAGE,
+            Permissions::CATALOG_MANAGE,
             Permissions::ROLES_MANAGE,
             Permissions::DASHBOARD_VIEW_FULL,
         ]);

@@ -156,7 +156,7 @@ Exemple de référence (8.3.1) : 29,95 € × 47,50 MRU/€ = 1 422,63 MRU + 20 
 | 0 | Socle technique | **Fait** (voir §7) |
 | 1 | Authentification & comptes | **Fait** (voir §7bis) |
 | 2 | Boutiques | **Fait** (voir §7ter) |
-| 3 | Synchronisation catalogue | À venir |
+| 3 | Synchronisation catalogue | **Fait** (voir §7quater) |
 | 4 | Moteur de calcul de prix | À venir |
 | 5 | Catalogue & recherche | À venir |
 | 6 | Panier & commande (state machine 15 statuts) | À venir |
@@ -212,6 +212,26 @@ Exemple de référence (8.3.1) : 29,95 € × 47,50 MRU/€ = 1 422,63 MRU + 20 
 
 ---
 
+## 7quater. Sprint 3 — ce qui a été livré
+
+**Modèle de données** : `categories` (nom bilingue jsonb, hiérarchie parent/enfant), `category_mappings` (catégorie source par boutique → catégorie unifiée, créée automatiquement au premier produit rencontré dans cette catégorie source), `products` (nom/description bilingues, images, prix EUR source, statut, `unavailable_since`, `translation_locked`), `product_variants` (taille, couleur, prix, disponibilité), `sync_logs` (compteurs créés/mis à jour/désactivés + erreurs).
+
+**Moteur de synchronisation** (`CatalogSyncService`) : upsert produits/variantes par référence externe, création automatique des mappings catégorie source manquants, détection d'anomalies (8.2.2) — un produit non revu lors d'un cycle est marqué « indisponible » puis « retiré du catalogue » après un délai configurable par boutique (`sync_config.unavailable_grace_days`, 14 jours par défaut) — et préservation intégrale du dernier catalogue valide en cas d'échec (exception capturée, journalisée dans `sync_logs`, aucun produit existant modifié).
+
+**Correction manuelle des traductions (8.2.1)** : un bug a été détecté et corrigé pendant le développement — une resynchronisation écrasait silencieusement toute correction manuelle du nom/de la description d'un produit, ce qui aurait rendu la fonctionnalité inutile. Un champ `translation_locked` (posé automatiquement par `PUT /api/v1/admin/products/{id}` dès qu'on modifie `name` ou `description`) fait que `CatalogSyncService` ne touche plus jamais à ces champs pour un produit corrigé, quel que soit le nombre de synchronisations suivantes — vérifié par test.
+
+**Déclenchement** : commande `php artisan catalog:sync {boutique?}`, job Redis (`SyncBoutiqueCatalog`, `QUEUE_CONNECTION=redis`), planificateur horaire qui ne synchronise que les boutiques dont la fréquence configurée (`sync_config.frequency_hours`) est dépassée depuis leur dernière synchronisation. Les boutiques « en_test » sont synchronisées au même titre que les « active » (c'est tout l'intérêt de ce statut — valider la synchro avant publication, 8.1.2).
+
+**Endpoints admin** (permission `catalog.manage`, nouvelle — extension du RBAC, absente de la matrice de synthèse 7.5 mais cohérente avec la granularité par module demandée en 8.9.6) : CRUD catégories, consultation/mapping des catégories source par boutique, déclenchement manuel de synchro et consultation du journal (8.2.3), liste/consultation/correction manuelle des produits.
+
+**Points signalés explicitement — non finalisés** :
+- **`StubCatalogFetcher` n'est pas un scraper réel.** Le cahier des charges (3.3) confirme qu'aucune boutique ne propose d'API officielle et que la récupération devra s'appuyer sur une lecture structurée des pages publiques de chaque site, dans le respect de leurs CGU. Écrire un vrai connecteur par boutique (Zara, Mango, Bershka, ...) — structure HTML propre à chaque site, mesures anti-bot, vérification des CGU — est un chantier à part entière qui n'a pas été fait dans cette session. `StubCatalogFetcher` génère 3 produits fictifs déterministes par boutique, uniquement pour permettre au moteur de synchronisation d'être développé et testé de bout en bout. À remplacer avant toute mise en production, boutique par boutique (l'interface `CatalogFetcher` est prête à recevoir une vraie implémentation).
+- **`PassthroughTranslator` ne traduit rien** (recopie le texte source dans les deux langues). Le CDC demande une traduction automatique FR/AR mais ne précise aucun service (Google Cloud Translation, DeepL, etc.). La correction manuelle, elle, est pleinement fonctionnelle.
+
+**Tests** : 21 nouveaux tests (Unit sur le moteur de synchro : création, mise à jour, anomalies, délai de grâce, verrou de traduction, échec préservant le catalogue ; Feature sur catégories, mapping, déclenchement/journal de synchro, produits admin) — 61 tests au total, tous verts. Migrations validées sur PostgreSQL réel.
+
+---
+
 ## 8. Points encore ouverts
 
 1. Précédence exacte marge boutique vs marge catégorie en cas de définition simultanée sur un même produit (règle par défaut retenue : catégorie > boutique > global) — Sprint 4.
@@ -219,3 +239,4 @@ Exemple de référence (8.3.1) : 29,95 € × 47,50 MRU/€ = 1 422,63 MRU + 20 
 3. **Opérateur SMS pour l'envoi réel des OTP** : non précisé par le cahier des charges — à trancher avant mise en production (voir §7bis).
 4. **`Boutique::canBeDeleted()` à compléter** dès que le modèle Commande existe (Sprint 6) — pour l'instant la suppression n'est jamais bloquée par une commande active, faute de commandes (voir §7ter).
 5. Upload réel de logo/bannière boutique (actuellement de simples URL) — à raccorder au stockage S3/MinIO si un flux d'upload dédié est souhaité plutôt que de simples liens externes.
+6. **Un vrai `CatalogFetcher` par boutique** (scraping respectueux des CGU ou accord avec les boutiques) et **un vrai `TranslatorGateway`** — non spécifiés par le cahier des charges, à trancher avant mise en production (voir §7quater).

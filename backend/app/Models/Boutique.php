@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
@@ -40,6 +41,31 @@ class Boutique extends Model
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', BoutiqueStatus::ACTIVE);
+    }
+
+    /**
+     * Boutiques concernées par la synchronisation (8.2) : actives, et aussi
+     * "en_test" puisque ce statut sert justement à valider la qualité de la
+     * synchronisation avant publication (8.1.2).
+     */
+    public function scopeSyncable(Builder $query): Builder
+    {
+        return $query->whereIn('status', [BoutiqueStatus::ACTIVE, BoutiqueStatus::EN_TEST]);
+    }
+
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class);
+    }
+
+    public function syncLogs(): HasMany
+    {
+        return $this->hasMany(SyncLog::class);
+    }
+
+    public function categoryMappings(): HasMany
+    {
+        return $this->hasMany(CategoryMapping::class);
     }
 
     /**

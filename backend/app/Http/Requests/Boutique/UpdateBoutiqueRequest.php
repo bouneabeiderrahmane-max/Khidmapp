@@ -32,6 +32,7 @@ class UpdateBoutiqueRequest extends FormRequest
             'sync_config.excluded_categories.*' => ['string'],
             'sync_config.translation_auto' => ['nullable', 'boolean'],
             'sync_config.alert_threshold_percent' => ['nullable', 'integer', 'between:0,100'],
+            'sync_config.unavailable_grace_days' => ['nullable', 'integer', 'min:0'],
         ];
     }
 }

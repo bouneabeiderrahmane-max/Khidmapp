@@ -16,4 +16,16 @@ return [
         'en_test' => 'قيد الاختبار',
     ],
     'boutique_deletion_blocked' => 'لا يمكن حذف هذا المتجر: يوجد طلب نشط مرتبط به.',
+    'category_has_children' => 'لا يمكن حذف هذه الفئة: توجد فئات فرعية تابعة لها.',
+    'category_has_products' => 'لا يمكن حذف هذه الفئة: توجد منتجات مرتبطة بها.',
+    'product_status' => [
+        'active' => 'متوفر',
+        'indisponible' => 'غير متوفر',
+        'discontinued' => 'مسحوب من الكتالوج',
+    ],
+    'sync_status' => [
+        'running' => 'قيد التنفيذ',
+        'success' => 'ناجحة',
+        'failed' => 'فاشلة',
+    ],
 ];

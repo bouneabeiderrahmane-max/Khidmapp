@@ -11,10 +11,12 @@ class BoutiqueSeeder extends Seeder
 {
     /**
      * Boutiques de référence pour le lancement (cahier des charges, 8.1.1).
-     * Statut "en_test" : la synchronisation (Sprint 3) n'existe pas encore,
-     * donc aucune boutique n'est publiable au catalogue client pour l'instant
-     * (règle 8.1.2 : le statut "en_test" sert justement à valider la
-     * synchronisation avant publication).
+     * Statut "en_test" par défaut : la synchronisation réelle par site n'est
+     * pas encore implémentée (StubCatalogFetcher est un placeholder — voir
+     * son docblock), donc aucune boutique n'est publiable au catalogue
+     * client pour l'instant (règle 8.1.2 : le statut "en_test" sert
+     * justement à valider la qualité de la synchronisation avant
+     * publication).
      */
     private const REFERENCE_BOUTIQUES = [
         ['name' => 'Zara España', 'base_url' => 'https://www.zara.com/es/'],
@@ -44,6 +46,7 @@ class BoutiqueSeeder extends Seeder
                         'excluded_categories' => [],
                         'translation_auto' => true,
                         'alert_threshold_percent' => 10,
+                        'unavailable_grace_days' => 14,
                     ],
                 ]
             );
