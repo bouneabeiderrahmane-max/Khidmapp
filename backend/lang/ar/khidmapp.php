@@ -9,4 +9,11 @@ return [
     'account_deactivated' => 'تم تعطيل حسابك.',
     'email_already_used' => 'هذا البريد الإلكتروني مستخدم بالفعل.',
     'phone_already_used' => 'رقم الهاتف هذا مستخدم بالفعل.',
+    'boutique_status' => [
+        'active' => 'نشطة',
+        'inactive' => 'غير نشطة',
+        'en_pause' => 'متوقفة مؤقتًا',
+        'en_test' => 'قيد الاختبار',
+    ],
+    'boutique_deletion_blocked' => 'لا يمكن حذف هذا المتجر: يوجد طلب نشط مرتبط به.',
 ];

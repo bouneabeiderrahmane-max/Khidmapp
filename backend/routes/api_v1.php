@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\BoutiqueController as AdminBoutiqueController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\BoutiqueController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -26,3 +28,11 @@ Route::prefix('auth')->group(function () {
 });
 
 Route::middleware('auth:api')->group(base_path('routes/api_v1_me.php'));
+
+Route::get('/boutiques', [BoutiqueController::class, 'index']);
+Route::get('/boutiques/{boutique:slug}', [BoutiqueController::class, 'show']);
+
+Route::middleware(['auth:api', 'can:boutiques.manage'])->prefix('admin')->group(function () {
+    Route::apiResource('boutiques', AdminBoutiqueController::class);
+    Route::patch('/boutiques/{boutique}/status', [AdminBoutiqueController::class, 'updateStatus']);
+});

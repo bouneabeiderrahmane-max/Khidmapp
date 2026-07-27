@@ -39,6 +39,13 @@ Générée automatiquement depuis le code (`dedoc/scramble`) :
 
 > **Note SMS** : le cahier des charges ne précise pas d'opérateur SMS pour la Mauritanie. En attendant ce choix, l'envoi du code OTP passe par `App\Services\Sms\LogSmsGateway`, qui écrit le message dans les logs applicatifs au lieu de l'envoyer réellement — ce n'est **pas** un canal de production. Remplacer l'implémentation liée à `App\Contracts\SmsGateway` (binding dans `AppServiceProvider`) une fois un opérateur choisi.
 
+## Boutiques (Sprint 2)
+
+- `GET /api/v1/boutiques` / `GET /api/v1/boutiques/{slug}` — catalogue public, boutiques actives uniquement
+- `GET/POST/PUT/DELETE /api/v1/admin/boutiques` + `PATCH /api/v1/admin/boutiques/{id}/status` — gestion complète (permission `boutiques.manage`, rôle `administrateur` uniquement)
+
+> **Note** : `Boutique::canBeDeleted()` retourne toujours `true` pour l'instant — la règle « pas de suppression si commande active » ne peut pas encore être appliquée, le modèle Commande arrivant au Sprint 6.
+
 ## Tests
 
 ```bash

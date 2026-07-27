@@ -155,7 +155,7 @@ Exemple de référence (8.3.1) : 29,95 € × 47,50 MRU/€ = 1 422,63 MRU + 20 
 |---|---|---|
 | 0 | Socle technique | **Fait** (voir §7) |
 | 1 | Authentification & comptes | **Fait** (voir §7bis) |
-| 2 | Boutiques | À venir |
+| 2 | Boutiques | **Fait** (voir §7ter) |
 | 3 | Synchronisation catalogue | À venir |
 | 4 | Moteur de calcul de prix | À venir |
 | 5 | Catalogue & recherche | À venir |
@@ -198,8 +198,24 @@ Exemple de référence (8.3.1) : 29,95 € × 47,50 MRU/€ = 1 422,63 MRU + 20 
 
 ---
 
+## 7ter. Sprint 2 — ce qui a été livré
+
+**Boutiques** : CRUD complet réservé à l'administrateur (`GET/POST/PUT/DELETE /api/v1/admin/boutiques`, permission `boutiques.manage`), avec transition de statut dédiée (`PATCH .../status`) parmi les 4 statuts confirmés (Active/Inactive/En pause/En test — 8.1). Champs conformes à la section 8.1 : nom, logo/bannière (URL pour l'instant), URL source, pays, devise, statut, marge spécifique, paramètres de synchronisation (`sync_config` JSON : fréquence, catégories incluses/exclues, traduction automatique, seuil d'alerte).
+
+**Catalogue public** : `GET /api/v1/boutiques` et `GET /api/v1/boutiques/{slug}` ne montrent que les boutiques au statut `active` (règle 8.1.2), et masquent la marge et la configuration de synchro (réservées à l'admin) — vérifié par test.
+
+**Boutiques de référence** : les 8 boutiques de lancement (8.1.1) sont seedées au statut `en_test`, pays ES / devise EUR.
+
+**Règles de gestion** : slug auto-généré et stable (les mises à jour de nom ne cassent pas l'URL publique) ; suppression = soft delete. La règle « suppression impossible s'il existe une commande active » (8.1.2) est représentée par `Boutique::canBeDeleted()` mais **retourne toujours `true` pour l'instant** — le modèle Commande n'existe pas avant le Sprint 6. Point à compléter avant mise en production, signalé explicitement dans le code et ici.
+
+**Tests** : 13 tests Feature (visibilité publique, permissions par rôle — y compris que `service_client` ne peut pas gérer les boutiques —, CRUD, transition de statut, validation) ; 40 tests au total sur l'ensemble du backend, tous verts. Un bug a été trouvé et corrigé pendant le développement : après `create()`, l'instance en mémoire ne reflétait pas le défaut `en_test` appliqué côté PostgreSQL (`status` apparaissait `null` dans la réponse JSON alors que la ligne en base était correcte) — corrigé par un `->fresh()` après création.
+
+---
+
 ## 8. Points encore ouverts
 
 1. Précédence exacte marge boutique vs marge catégorie en cas de définition simultanée sur un même produit (règle par défaut retenue : catégorie > boutique > global) — Sprint 4.
 2. Détail fin des permissions par sous-action au sein de chaque module (la matrice CDC 7.5 est une synthèse ; la granularité complète sera affinée module par module au fil des sprints, avec validation à chaque fois).
 3. **Opérateur SMS pour l'envoi réel des OTP** : non précisé par le cahier des charges — à trancher avant mise en production (voir §7bis).
+4. **`Boutique::canBeDeleted()` à compléter** dès que le modèle Commande existe (Sprint 6) — pour l'instant la suppression n'est jamais bloquée par une commande active, faute de commandes (voir §7ter).
+5. Upload réel de logo/bannière boutique (actuellement de simples URL) — à raccorder au stockage S3/MinIO si un flux d'upload dédié est souhaité plutôt que de simples liens externes.
