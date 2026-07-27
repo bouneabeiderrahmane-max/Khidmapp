@@ -6,12 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Pricing\StoreMarginRuleRequest;
 use App\Http\Resources\MarginRuleResource;
 use App\Models\MarginRule;
+use App\Services\Audit\AuditLogger;
+use App\Support\AuditAction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class MarginRuleController extends Controller
 {
+    public function __construct(private readonly AuditLogger $audit) {}
+
     public function index(Request $request): AnonymousResourceCollection
     {
         $rules = MarginRule::query()
@@ -30,6 +34,12 @@ class MarginRuleController extends Controller
             'percent' => $request->input('percent'),
             'effective_at' => $request->input('effective_at', now()),
             'created_by' => $request->user()->id,
+        ]);
+
+        $this->audit->log($request->user(), AuditAction::MARGIN_RULE_CREATED, $rule, [
+            'scope_type' => $request->input('scope_type'),
+            'scope_id' => $request->input('scope_id'),
+            'percent' => $request->input('percent'),
         ]);
 
         return (new MarginRuleResource($rule))->response()->setStatusCode(201);

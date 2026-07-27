@@ -90,4 +90,6 @@ return [
         'resolue' => 'تم الحل',
         'cloturee' => 'مغلقة',
     ],
+    'account_blocked' => 'تم حظر حسابك. يرجى التواصل مع خدمة العملاء لمزيد من المعلومات.',
+    'cannot_assign_internal_roles_to_client' => 'لا يمكن إسناد دور داخلي لحساب عميل.',
 ];

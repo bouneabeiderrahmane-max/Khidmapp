@@ -51,6 +51,8 @@ class RolePermissionSeeder extends Seeder
             Permissions::NOTIFICATIONS_VIEW,
             Permissions::COMPLAINTS_MANAGE,
             Permissions::CONTENT_MANAGE,
+            Permissions::USERS_MANAGE,
+            Permissions::AUDIT_VIEW,
         ]);
     }
 }

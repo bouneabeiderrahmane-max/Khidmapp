@@ -5,6 +5,7 @@ use App\Exceptions\Order\InvalidOrderTransitionException;
 use App\Exceptions\Order\MissingTransitionNoteException;
 use App\Exceptions\Payment\InvalidPaymentAttemptException;
 use App\Exceptions\Payment\InvalidWebhookSignatureException;
+use App\Http\Middleware\EnsureUserIsNotBlocked;
 use App\Http\Middleware\SetLocaleFromRequest;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
@@ -24,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->api(prepend: [
             SetLocaleFromRequest::class,
+            EnsureUserIsNotBlocked::class,
         ]);
 
         // API-only backend: never redirect an unauthenticated request to a

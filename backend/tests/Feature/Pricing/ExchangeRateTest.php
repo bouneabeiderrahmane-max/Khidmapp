@@ -3,6 +3,7 @@
 namespace Tests\Feature\Pricing;
 
 use App\Models\User;
+use App\Support\AuditAction;
 use App\Support\Roles;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -33,6 +34,9 @@ class ExchangeRateTest extends TestCase
 
         $response->assertCreated()->assertJsonPath('data.rate', '47.500000');
         $this->assertDatabaseHas('exchange_rates', ['currency_pair' => 'EUR_MRU']);
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => AuditAction::EXCHANGE_RATE_CREATED,
+        ]);
     }
 
     public function test_a_client_cannot_manage_exchange_rates(): void

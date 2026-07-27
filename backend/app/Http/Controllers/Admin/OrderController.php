@@ -104,6 +104,7 @@ class OrderController extends Controller
                 'exchange_rate_snapshot' => $totals->exchangeRate,
                 'subtotal_mru' => $totals->subtotalMru,
                 'delivery_fee_snapshot_mru' => $totals->deliveryFeeMru,
+                'delivery_zone' => $totals->deliveryZone,
                 'total_mru' => $totals->totalMru,
             ]);
 
@@ -121,6 +122,7 @@ class OrderController extends Controller
                     'unit_price_eur' => $breakdown->basePriceEur,
                     'unit_price_mru_snapshot' => $breakdown->subtotalMru,
                     'margin_percent_snapshot' => $breakdown->marginPercent,
+                    'margin_amount_mru_snapshot' => $breakdown->marginAmountMru,
                     'margin_source_snapshot' => $breakdown->marginSource,
                 ]);
             }

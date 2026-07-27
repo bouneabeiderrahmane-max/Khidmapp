@@ -7,6 +7,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -15,7 +16,7 @@ use Illuminate\Notifications\Notifiable;
 use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'phone', 'phone_verified_at', 'email', 'email_verified_at', 'password', 'locale'])]
+#[Fillable(['name', 'phone', 'phone_verified_at', 'email', 'email_verified_at', 'password', 'locale', 'blocked_at', 'blocked_until', 'blocked_reason', 'blocked_by'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements JWTSubject
 {
@@ -33,7 +34,23 @@ class User extends Authenticatable implements JWTSubject
             'email_verified_at' => 'datetime',
             'phone_verified_at' => 'datetime',
             'password' => 'hashed',
+            'blocked_at' => 'datetime',
+            'blocked_until' => 'datetime',
         ];
+    }
+
+    /**
+     * Blocage temporaire ou définitif (CDC 8.9.2) : blocked_until = null
+     * signifie un blocage définitif ; un blocage temporaire expiré n'est
+     * plus considéré actif.
+     */
+    public function isBlocked(): bool
+    {
+        if ($this->blocked_at === null) {
+            return false;
+        }
+
+        return $this->blocked_until === null || $this->blocked_until->isFuture();
     }
 
     public function addresses(): HasMany
@@ -64,6 +81,11 @@ class User extends Authenticatable implements JWTSubject
     public function complaints(): HasMany
     {
         return $this->hasMany(Complaint::class);
+    }
+
+    public function blockedBy(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'blocked_by');
     }
 
     public function getJWTIdentifier(): mixed

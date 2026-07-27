@@ -6,7 +6,9 @@ use App\Exceptions\Payment\InvalidPaymentAttemptException;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\User;
+use App\Services\Audit\AuditLogger;
 use App\Services\Order\OrderStatusTransitioner;
+use App\Support\AuditAction;
 use App\Support\OrderActorType;
 use App\Support\OrderStatus;
 use App\Support\PaymentMethod;
@@ -22,7 +24,10 @@ use Illuminate\Support\Facades\DB;
  */
 class ManualPaymentReviewer
 {
-    public function __construct(private readonly OrderStatusTransitioner $transitioner) {}
+    public function __construct(
+        private readonly OrderStatusTransitioner $transitioner,
+        private readonly AuditLogger $audit,
+    ) {}
 
     public function submitProof(Order $order, User $user, UploadedFile $file): Payment
     {
@@ -65,6 +70,8 @@ class ManualPaymentReviewer
                 $this->transitioner->transition($order, OrderStatus::PAYMENT_VALIDATED, OrderActorType::forAgent($agent), $agent->id);
             }
 
+            $this->audit->log($agent, AuditAction::PAYMENT_VALIDATED, $payment);
+
             return $payment->fresh();
         });
     }
@@ -80,6 +87,10 @@ class ManualPaymentReviewer
             'reviewed_at' => now(),
         ]);
 
+        $this->audit->log($agent, AuditAction::PAYMENT_REJECTED, $payment, [
+            'reason' => $reason,
+        ]);
+
         return $payment->fresh();
     }
 
@@ -93,6 +104,10 @@ class ManualPaymentReviewer
             'info_requested_at' => now(),
             'reviewed_by' => $agent->id,
             'reviewed_at' => now(),
+        ]);
+
+        $this->audit->log($agent, AuditAction::PAYMENT_INFO_REQUESTED, $payment, [
+            'note' => $note,
         ]);
 
         return $payment->fresh();

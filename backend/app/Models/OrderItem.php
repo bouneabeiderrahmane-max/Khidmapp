@@ -17,6 +17,7 @@ class OrderItem extends Model
             'unit_price_eur' => 'decimal:2',
             'unit_price_mru_snapshot' => 'decimal:2',
             'margin_percent_snapshot' => 'decimal:2',
+            'margin_amount_mru_snapshot' => 'decimal:2',
         ];
     }
 

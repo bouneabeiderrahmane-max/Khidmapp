@@ -48,6 +48,10 @@ class AuthController extends Controller
             $user->update(['phone_verified_at' => now()]);
         }
 
+        if ($user->isBlocked()) {
+            return response()->json(['message' => __('khidmapp.account_blocked')], 403);
+        }
+
         return $this->respondWithToken(Auth::guard('api')->login($user), $user);
     }
 
@@ -72,7 +76,15 @@ class AuthController extends Controller
             return response()->json(['message' => __('khidmapp.login_failed')], 401);
         }
 
-        return $this->respondWithToken($token, Auth::guard('api')->user());
+        $user = Auth::guard('api')->user();
+
+        if ($user->isBlocked()) {
+            Auth::guard('api')->logout();
+
+            return response()->json(['message' => __('khidmapp.account_blocked')], 403);
+        }
+
+        return $this->respondWithToken($token, $user);
     }
 
     public function refresh(): JsonResponse

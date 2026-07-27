@@ -90,4 +90,6 @@ return [
         'resolue' => 'Résolue',
         'cloturee' => 'Clôturée',
     ],
+    'account_blocked' => 'Votre compte a été bloqué. Contactez le service client pour plus d\'informations.',
+    'cannot_assign_internal_roles_to_client' => 'Impossible d\'attribuer un rôle interne à un compte client.',
 ];

@@ -1,10 +1,12 @@
 <?php
 
+use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\BoutiqueController as AdminBoutiqueController;
 use App\Http\Controllers\Admin\BoutiqueSyncController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\CategoryMappingController;
 use App\Http\Controllers\Admin\ComplaintController as AdminComplaintController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DeliveryFeeTierController;
 use App\Http\Controllers\Admin\ExchangeRateController;
 use App\Http\Controllers\Admin\FaqController as AdminFaqController;
@@ -16,6 +18,7 @@ use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductPricePreviewController;
 use App\Http\Controllers\Admin\QualityControlController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BoutiqueController;
 use App\Http\Controllers\CategoryController;
@@ -123,6 +126,30 @@ Route::middleware(['auth:api', 'can:complaints.manage'])->prefix('admin')->group
 
 Route::middleware(['auth:api', 'can:content.manage'])->prefix('admin')->group(function () {
     Route::apiResource('faqs', AdminFaqController::class)->except(['show']);
+});
+
+Route::middleware(['auth:api', 'can:users.manage'])->prefix('admin')->group(function () {
+    Route::get('/users', [AdminUserController::class, 'index']);
+    Route::get('/users/{user}', [AdminUserController::class, 'show']);
+    Route::post('/users/{user}/block', [AdminUserController::class, 'block']);
+    Route::post('/users/{user}/unblock', [AdminUserController::class, 'unblock']);
+});
+
+Route::middleware(['auth:api', 'can:roles.manage'])->prefix('admin')->group(function () {
+    Route::post('/users', [AdminUserController::class, 'store']);
+    Route::put('/users/{user}/roles', [AdminUserController::class, 'updateRoles']);
+});
+
+Route::middleware(['auth:api', 'can:audit.view'])->prefix('admin')->group(function () {
+    Route::get('/audit-logs', [AuditLogController::class, 'index']);
+});
+
+Route::middleware(['auth:api'])->prefix('admin')->group(function () {
+    Route::get('/dashboard/report', [DashboardController::class, 'report']);
+});
+
+Route::middleware(['auth:api', 'can:dashboard.view_full'])->prefix('admin')->group(function () {
+    Route::get('/dashboard/report.csv', [DashboardController::class, 'exportCsv']);
 });
 
 Route::post('/webhooks/bankily', [BankilyWebhookController::class, 'handle']);

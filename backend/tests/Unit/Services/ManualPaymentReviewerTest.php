@@ -3,10 +3,12 @@
 namespace Tests\Unit\Services;
 
 use App\Exceptions\Payment\InvalidPaymentAttemptException;
+use App\Models\AuditLog;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\User;
 use App\Services\Payment\ManualPaymentReviewer;
+use App\Support\AuditAction;
 use App\Support\OrderActorType;
 use App\Support\OrderStatus;
 use App\Support\PaymentMethod;
@@ -87,6 +89,12 @@ class ManualPaymentReviewerTest extends TestCase
         $this->assertSame($this->agent->id, $updated->reviewed_by);
         $this->assertSame(OrderStatus::PAYMENT_VALIDATED, $order->fresh()->status);
         $this->assertSame(OrderActorType::SERVICE_CLIENT, $order->fresh()->statusHistories()->latest()->first()->actor_type);
+        $this->assertDatabaseHas('audit_logs', [
+            'actor_id' => $this->agent->id,
+            'action' => AuditAction::PAYMENT_VALIDATED,
+            'subject_type' => $payment->getMorphClass(),
+            'subject_id' => $payment->id,
+        ]);
     }
 
     public function test_rejecting_a_pending_proof_requires_a_reason_and_does_not_change_order_status(): void
@@ -99,6 +107,9 @@ class ManualPaymentReviewerTest extends TestCase
         $this->assertSame(PaymentStatus::REJECTED, $updated->status);
         $this->assertSame('Preuve illisible.', $updated->rejection_reason);
         $this->assertSame(OrderStatus::AWAITING_PAYMENT, $order->fresh()->status);
+        $log = AuditLog::query()->where('action', AuditAction::PAYMENT_REJECTED)->firstOrFail();
+        $this->assertSame($payment->id, $log->subject_id);
+        $this->assertSame('Preuve illisible.', $log->changes['reason']);
     }
 
     public function test_requesting_more_info_does_not_change_order_status(): void
@@ -111,6 +122,8 @@ class ManualPaymentReviewerTest extends TestCase
         $this->assertSame(PaymentStatus::INFO_REQUESTED, $updated->status);
         $this->assertNotNull($updated->info_requested_at);
         $this->assertSame(OrderStatus::AWAITING_PAYMENT, $order->fresh()->status);
+        $log = AuditLog::query()->where('action', AuditAction::PAYMENT_INFO_REQUESTED)->firstOrFail();
+        $this->assertSame($payment->id, $log->subject_id);
     }
 
     public function test_a_client_can_resubmit_after_a_rejection_creating_a_new_payment_row(): void

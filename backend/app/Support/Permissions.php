@@ -65,6 +65,21 @@ final class Permissions
      */
     public const CONTENT_MANAGE = 'content.manage';
 
+    /**
+     * Recherche/consultation des comptes clients et internes, blocage
+     * temporaire ou définitif d'un compte client en cas d'abus (8.9.2).
+     * Distincte de `roles.manage` (création de comptes internes,
+     * attribution des rôles) : l'une gère les comptes, l'autre les droits.
+     */
+    public const USERS_MANAGE = 'users.manage';
+
+    /**
+     * Consultation du journal d'audit des opérations sensibles (validation
+     * de paiement, modification de marge, changement de rôle — exemple
+     * donné tel quel par le CDC, 8.9.6).
+     */
+    public const AUDIT_VIEW = 'audit.view';
+
     public static function all(): array
     {
         return [
@@ -80,6 +95,8 @@ final class Permissions
             self::NOTIFICATIONS_VIEW,
             self::COMPLAINTS_MANAGE,
             self::CONTENT_MANAGE,
+            self::USERS_MANAGE,
+            self::AUDIT_VIEW,
         ];
     }
 }

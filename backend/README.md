@@ -144,6 +144,23 @@ Aucun prix EUR, URL ou référence de boutique source n'est jamais exposé sur c
 > - Une réponse d'agent notifie également le client (push, gabarit `complaint_reply`) — extension au-delà des 10 événements listés en 8.7, signalée explicitement.
 > - FAQ réservée à l'administrateur (pas au service client) — le CDC n'attribue ce module à aucun rôle précis ; choix par analogie avec la gestion des boutiques/catégories.
 
+## Administration & pilotage (Sprint 11)
+
+- `GET /api/v1/admin/users` (filtrable par `role`/`search`), `GET .../{user}`, `POST .../{user}/block`, `POST .../{user}/unblock` — gestion des comptes (8.9.2, permission `users.manage`)
+- `POST /api/v1/admin/users` (création d'un compte interne), `PUT .../{user}/roles` (remplacement intégral des rôles) — gestion des droits (8.9.6, permission `roles.manage`)
+- `GET /api/v1/admin/audit-logs` (filtrable par `action`/`subject_type`/`actor_id`) — journal d'audit (8.9.6, permission `audit.view`)
+- `GET /api/v1/admin/dashboard/report` (filtrable par `from`/`to`/`boutique_id`/`zone`) — tableau de bord (8.9.7 + section 12, `dashboard.view_full` ou `dashboard.view_limited`)
+- `GET /api/v1/admin/dashboard/report.csv` — export CSV bilingue (`dashboard.view_full` uniquement)
+
+> **Notes** :
+> - Le blocage agit à deux niveaux puisque le JWT est sans état : refus au login **et** middleware global (`EnsureUserIsNotBlocked`) qui invalide immédiatement un jeton déjà émis.
+> - Un rôle interne ne peut pas être attribué à un compte client (422) — les deux univers ne se mélangent pas.
+> - Le journal d'audit couvre exactement les cas cités par le CDC (validation de paiement, modification de marge, changement de rôle) plus deux extensions signalées (blocage/déblocage de compte, création de compte interne) — il ne duplique pas `order_status_histories` (Sprint 6).
+> - Le tableau de bord a deux niveaux d'accès : le niveau limité (service client) reçoit les compteurs opérationnels mais **aucun chiffre financier** (CA, marge, chiffre d'affaires par boutique/zone/produit) ; l'export CSV est réservé au niveau complet.
+> - **Aucun coût logistique n'est suivi** (transport 3PL, entrepôt Madrid, douane) : `margin_realized_mru` est une marge brute, pas un résultat net — pas de « commission » calculable.
+> - **La gestion des promotions (8.9.5) n'a pas été traitée ce sprint** : aucune table, modèle, ni endpoint pour les codes promo/réductions.
+> - `orders.delivery_zone` et `order_items.margin_amount_mru_snapshot` ont été ajoutées rétroactivement pour ce reporting — `null` sur les commandes antérieures au Sprint 11.
+
 ## Tests
 
 ```bash

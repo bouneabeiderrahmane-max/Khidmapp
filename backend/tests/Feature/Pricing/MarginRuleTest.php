@@ -4,6 +4,7 @@ namespace Tests\Feature\Pricing;
 
 use App\Models\Boutique;
 use App\Models\User;
+use App\Support\AuditAction;
 use App\Support\Roles;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -29,6 +30,10 @@ class MarginRuleTest extends TestCase
             ->postJson('/api/v1/admin/margin-rules', ['scope_type' => 'global', 'percent' => 25])
             ->assertCreated()
             ->assertJsonPath('data.scope_id', null);
+
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => AuditAction::MARGIN_RULE_CREATED,
+        ]);
     }
 
     public function test_a_boutique_scope_requires_a_valid_scope_id(): void
