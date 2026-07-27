@@ -157,7 +157,7 @@ Exemple de référence (8.3.1) : 29,95 € × 47,50 MRU/€ = 1 422,63 MRU + 20 
 | 1 | Authentification & comptes | **Fait** (voir §7bis) |
 | 2 | Boutiques | **Fait** (voir §7ter) |
 | 3 | Synchronisation catalogue | **Fait** (voir §7quater) |
-| 4 | Moteur de calcul de prix | À venir |
+| 4 | Moteur de calcul de prix | **Fait** (voir §7quinquies) |
 | 5 | Catalogue & recherche | À venir |
 | 6 | Panier & commande (state machine 15 statuts) | À venir |
 | 7 | Paiements (Bankily + manuel) | À venir |
@@ -232,11 +232,25 @@ Exemple de référence (8.3.1) : 29,95 € × 47,50 MRU/€ = 1 422,63 MRU + 20 
 
 ---
 
+## 7quinquies. Sprint 4 — ce qui a été livré
+
+**Précédence des marges tranchée** : catégorie > boutique > global, confirmée par toi avant le développement (l'ambiguïté notée depuis le Sprint 2 est résolue). **Frais de livraison** : grille par tranche de prix final (`delivery_fee_tiers` : zone, palier min/max, frais), différenciée par zone — choix confirmé plutôt que d'ajouter poids/volume aux produits maintenant.
+
+**Modèle de données** : `exchange_rates` (paire de devises, taux, date d'entrée en vigueur, auteur — historique complet, jamais écrasé), `margin_rules` (portée global/boutique/catégorie, pourcentage, date d'entrée en vigueur), `delivery_fee_tiers` (zone, palier de prix, frais). Valeurs de départ seedées d'après l'exemple chiffré du CDC : 1 € = 47,50 MRU, marge globale 20 %, livraison forfaitaire 350 MRU vers Nouakchott.
+
+**`PricingService`** : conversion → résolution de marge par précédence → ajout des frais de livraison → prix final, avec arrondi à 2 décimales à chaque étape. **Le cas chiffré exact du CDC (8.3.1) a été vérifié au centime près** : 29,95 € → 1 422,63 MRU converti → +284,53 MRU de marge → +350,00 MRU de livraison → **2 057,16 MRU**, résultat identique à celui du cahier des charges. Retourne un `PriceBreakdown` exposant toutes les valeurs (taux, marge, source de la marge, frais) destinées à être historisées telles quelles sur une commande une fois le module Commande construit (Sprint 6, exigence 8.3.2).
+
+**Endpoints admin** (permission `pricing.manage_margin`, déjà prévue dans la matrice confirmée) : historique des taux de change (ajout d'un nouveau taux, jamais de modification rétroactive), règles de marge (création avec validation que `scope_id` existe bien dans la table boutiques/catégories selon la portée), CRUD de la grille de frais de livraison, et un endpoint d'aperçu de prix par produit/variante — utile pour vérifier le calcul avant que le catalogue public (Sprint 5) ou le panier (Sprint 6) n'existent.
+
+**Tests** : 22 nouveaux tests (Unit : cas de référence CDC, précédence des marges à deux niveaux, sélection du taux le plus récent, taux futur ignoré, sélection du bon palier de livraison, erreurs si taux/grille manquants ; Feature : CRUD et permissions des trois ressources admin, aperçu de prix) — 83 tests au total, tous verts. Migrations validées sur PostgreSQL réel.
+
+---
+
 ## 8. Points encore ouverts
 
-1. Précédence exacte marge boutique vs marge catégorie en cas de définition simultanée sur un même produit (règle par défaut retenue : catégorie > boutique > global) — Sprint 4.
-2. Détail fin des permissions par sous-action au sein de chaque module (la matrice CDC 7.5 est une synthèse ; la granularité complète sera affinée module par module au fil des sprints, avec validation à chaque fois).
-3. **Opérateur SMS pour l'envoi réel des OTP** : non précisé par le cahier des charges — à trancher avant mise en production (voir §7bis).
-4. **`Boutique::canBeDeleted()` à compléter** dès que le modèle Commande existe (Sprint 6) — pour l'instant la suppression n'est jamais bloquée par une commande active, faute de commandes (voir §7ter).
-5. Upload réel de logo/bannière boutique (actuellement de simples URL) — à raccorder au stockage S3/MinIO si un flux d'upload dédié est souhaité plutôt que de simples liens externes.
-6. **Un vrai `CatalogFetcher` par boutique** (scraping respectueux des CGU ou accord avec les boutiques) et **un vrai `TranslatorGateway`** — non spécifiés par le cahier des charges, à trancher avant mise en production (voir §7quater).
+1. Détail fin des permissions par sous-action au sein de chaque module (la matrice CDC 7.5 est une synthèse ; la granularité complète sera affinée module par module au fil des sprints, avec validation à chaque fois).
+2. **Opérateur SMS pour l'envoi réel des OTP** : non précisé par le cahier des charges — à trancher avant mise en production (voir §7bis).
+3. **`Boutique::canBeDeleted()` à compléter** dès que le modèle Commande existe (Sprint 6) — pour l'instant la suppression n'est jamais bloquée par une commande active, faute de commandes (voir §7ter).
+4. Upload réel de logo/bannière boutique (actuellement de simples URL) — à raccorder au stockage S3/MinIO si un flux d'upload dédié est souhaité plutôt que de simples liens externes.
+5. **Un vrai `CatalogFetcher` par boutique** (scraping respectueux des CGU ou accord avec les boutiques) et **un vrai `TranslatorGateway`** — non spécifiés par le cahier des charges, à trancher avant mise en production (voir §7quater).
+6. Poids/volume produit non modélisés (choix Sprint 4 : grille de livraison par tranche de prix) — à réévaluer si une grille par poids/volume s'avère nécessaire plus tard (voir §7quinquies).

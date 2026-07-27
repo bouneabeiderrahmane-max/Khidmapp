@@ -4,7 +4,11 @@ use App\Http\Controllers\Admin\BoutiqueController as AdminBoutiqueController;
 use App\Http\Controllers\Admin\BoutiqueSyncController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\CategoryMappingController;
+use App\Http\Controllers\Admin\DeliveryFeeTierController;
+use App\Http\Controllers\Admin\ExchangeRateController;
+use App\Http\Controllers\Admin\MarginRuleController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\ProductPricePreviewController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BoutiqueController;
 use App\Http\Controllers\CategoryController;
@@ -55,4 +59,16 @@ Route::middleware(['auth:api', 'can:catalog.manage'])->prefix('admin')->group(fu
     Route::get('/products', [AdminProductController::class, 'index']);
     Route::get('/products/{product}', [AdminProductController::class, 'show']);
     Route::put('/products/{product}', [AdminProductController::class, 'update']);
+});
+
+Route::middleware(['auth:api', 'can:pricing.manage_margin'])->prefix('admin')->group(function () {
+    Route::get('/exchange-rates', [ExchangeRateController::class, 'index']);
+    Route::post('/exchange-rates', [ExchangeRateController::class, 'store']);
+
+    Route::get('/margin-rules', [MarginRuleController::class, 'index']);
+    Route::post('/margin-rules', [MarginRuleController::class, 'store']);
+
+    Route::apiResource('delivery-fee-tiers', DeliveryFeeTierController::class)->except(['show']);
+
+    Route::get('/products/{product}/price-preview', ProductPricePreviewController::class);
 });
