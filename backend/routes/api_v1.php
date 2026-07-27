@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\CategoryMappingController;
 use App\Http\Controllers\Admin\DeliveryFeeTierController;
 use App\Http\Controllers\Admin\ExchangeRateController;
 use App\Http\Controllers\Admin\MarginRuleController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductPricePreviewController;
 use App\Http\Controllers\Auth\AuthController;
@@ -74,4 +75,14 @@ Route::middleware(['auth:api', 'can:pricing.manage_margin'])->prefix('admin')->g
     Route::apiResource('delivery-fee-tiers', DeliveryFeeTierController::class)->except(['show']);
 
     Route::get('/products/{product}/price-preview', ProductPricePreviewController::class);
+});
+
+Route::middleware(['auth:api', 'can:orders.manage_status'])->prefix('admin')->group(function () {
+    Route::get('/orders', [AdminOrderController::class, 'index']);
+    Route::get('/orders/{order}', [AdminOrderController::class, 'show']);
+    Route::patch('/orders/{order}/status', [AdminOrderController::class, 'updateStatus']);
+});
+
+Route::middleware(['auth:api', 'can:orders.create_for_client'])->prefix('admin')->group(function () {
+    Route::post('/orders', [AdminOrderController::class, 'store']);
 });

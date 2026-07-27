@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\BoutiqueStatus;
+use App\Support\OrderStatus;
 use Database\Factories\BoutiqueFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -70,13 +71,16 @@ class Boutique extends Model
 
     /**
      * Règle CDC 8.1.2 : suppression impossible s'il existe une commande
-     * active liée à la boutique. Le modèle Commande n'existe pas encore
-     * (Sprint 6) — cette méthode retourne toujours true pour l'instant et
-     * DOIT être complétée dès que les commandes existent, avant toute mise
-     * en production.
+     * active liée à la boutique (Sprint 6 : le modèle Commande existe
+     * désormais).
      */
     public function canBeDeleted(): bool
     {
-        return true;
+        $terminalStatuses = [OrderStatus::DELIVERED, OrderStatus::CANCELLED, OrderStatus::REFUNDED];
+
+        return ! OrderItem::query()
+            ->where('boutique_id', $this->id)
+            ->whereHas('order', fn ($q) => $q->whereNotIn('status', $terminalStatuses))
+            ->exists();
     }
 }

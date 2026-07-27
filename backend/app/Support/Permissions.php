@@ -11,6 +11,14 @@ final class Permissions
 {
     public const ORDERS_CREATE_FOR_CLIENT = 'orders.create_for_client';
 
+    /**
+     * Supervision globale des commandes et intervention manuelle (7.4 :
+     * "Gestion des commandes : supervision globale, intervention manuelle
+     * en cas de blocage") — transitions de statut par le service client ou
+     * l'administrateur (Sprint 6, extension du RBAC granulaire 8.9.6).
+     */
+    public const ORDERS_MANAGE_STATUS = 'orders.manage_status';
+
     public const PAYMENTS_VALIDATE_MANUAL = 'payments.validate_manual';
 
     public const PRICING_MANAGE_MARGIN = 'pricing.manage_margin';
@@ -37,6 +45,7 @@ final class Permissions
     {
         return [
             self::ORDERS_CREATE_FOR_CLIENT,
+            self::ORDERS_MANAGE_STATUS,
             self::PAYMENTS_VALIDATE_MANUAL,
             self::PRICING_MANAGE_MARGIN,
             self::BOUTIQUES_MANAGE,

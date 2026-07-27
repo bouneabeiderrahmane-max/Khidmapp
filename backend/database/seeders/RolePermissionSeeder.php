@@ -31,6 +31,7 @@ class RolePermissionSeeder extends Seeder
         $serviceClient = Role::findOrCreate(Roles::SERVICE_CLIENT);
         $serviceClient->givePermissionTo([
             Permissions::ORDERS_CREATE_FOR_CLIENT,
+            Permissions::ORDERS_MANAGE_STATUS,
             Permissions::PAYMENTS_VALIDATE_MANUAL,
             Permissions::DASHBOARD_VIEW_LIMITED,
         ]);
@@ -38,6 +39,7 @@ class RolePermissionSeeder extends Seeder
         $administrateur = Role::findOrCreate(Roles::ADMINISTRATEUR);
         $administrateur->givePermissionTo([
             Permissions::ORDERS_CREATE_FOR_CLIENT,
+            Permissions::ORDERS_MANAGE_STATUS,
             Permissions::PAYMENTS_VALIDATE_MANUAL,
             Permissions::PRICING_MANAGE_MARGIN,
             Permissions::BOUTIQUES_MANAGE,

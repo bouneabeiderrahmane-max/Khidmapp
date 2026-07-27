@@ -159,7 +159,7 @@ Exemple de référence (8.3.1) : 29,95 € × 47,50 MRU/€ = 1 422,63 MRU + 20 
 | 3 | Synchronisation catalogue | **Fait** (voir §7quater) |
 | 4 | Moteur de calcul de prix | **Fait** (voir §7quinquies) |
 | 5 | Catalogue & recherche | **Fait** (voir §7sexies) |
-| 6 | Panier & commande (state machine 15 statuts) | À venir |
+| 6 | Panier & commande (state machine 15 statuts) | **Fait** (voir §7septies) |
 | 7 | Paiements (Bankily + manuel) | À venir |
 | 8 | Logistique (10 étapes, alertes SLA) | À venir |
 | 9 | Notifications (FCM/SMS/e-mail) | À venir |
@@ -262,12 +262,34 @@ Exemple de référence (8.3.1) : 29,95 € × 47,50 MRU/€ = 1 422,63 MRU + 20 
 
 ---
 
+## 7septies. Sprint 6 — ce qui a été livré
+
+**Panier** : `Cart`/`CartItem` (un panier par client, créé à la volée). `GET/POST/PUT/DELETE /api/v1/cart[/items/{id}]` — ajout (fusionne la quantité si la variante y est déjà), modification, suppression, avec vérification de propriété (403 si le panier n'appartient pas à l'utilisateur connecté) et refus d'ajouter une variante dont le produit ou la boutique n'est pas `active` (`khidmapp.product_unavailable`).
+
+**Choix de conception signalé — statut "Brouillon"** : le CDC (8.4) liste "Brouillon" comme premier statut ("client ajoute des produits au panier"), mais aucune commande n'existe encore à ce stade fonctionnellement : le panier (`Cart`/`CartItem`) joue déjà ce rôle. La table `orders` n'est donc créée qu'au passage de commande, en démarrant directement à `paiement_en_attente` — ce choix évite des lignes `orders` orphelines pour des paniers jamais finalisés. `OrderStatus::DRAFT` existe pour compléter l'énumération des 15 statuts mais n'est jamais atteint par le parcours normal.
+
+**State machine des 15 statuts (`OrderStatusTransitioner`)** : chaque transition est validée contre `OrderStatus::allowedNextStatuses()` (séquence normale, annulation depuis tout statut non terminal, remboursement uniquement depuis "Livré" ou depuis "Annulé") et journalisée intégralement dans `order_status_histories` (statut précédent/suivant, type d'acteur — système/client/service_client/administrateur —, note, horodatage — 8.4.1). Un remboursement exige toujours une note ; une annulation au-delà de la fenêtre gratuite (avant "Expédié par la boutique" — 8.4.1) exige également une note et marque `cancellation_fee_applicable = true`, faute de pouvoir prélever ces frais avant l'intégration du paiement (Sprint 7).
+
+**Frais de livraison consolidés (8.6)** : `PricingService::subtotalForVariant()` calcule conversion + marge par ligne, sans frais de livraison ; `CartPricingCalculator` additionne les sous-totaux puis appelle `deliveryFeeForAmount()` **une seule fois** sur le total agrégé — le panier (`GET /cart`) et les deux parcours de commande (client et manuel) partagent ce même calcul, garantissant que le total simulé dans le panier est exactement celui facturé à la commande. Un test unitaire dédié (`CartPricingCalculatorTest`) démontre explicitement qu'une somme naïve par ligne aurait produit un résultat différent.
+
+**Commande client** : `POST /api/v1/orders` (adresse du client + mode de paiement, valide que l'adresse lui appartient), historise taux de change/marge/frais au moment de l'achat sur chaque `OrderItem` (8.3.2), vide le panier après création. `GET /api/v1/orders`, `GET /api/v1/orders/{id}` (403 si pas le propriétaire). `POST /api/v1/orders/{id}/cancel` — auto-annulation réservée à la fenêtre gratuite ; au-delà, le client doit passer par le service client (`khidmapp.order_cancellation_blocked`).
+
+**Supervision & commande manuelle admin (7.4, 8.4.2)** : `GET /api/v1/admin/orders` (filtrable par statut/client/boutique) et `GET .../{id}` (permission `orders.manage_status`) ; `PATCH .../status` fait transiter une commande via `OrderStatusTransitioner` en déduisant l'acteur (`administrateur` ou `service_client`) du rôle de l'agent connecté ; `POST /api/v1/admin/orders` (permission `orders.create_for_client`) crée une commande pour le compte d'un client (assistance téléphonique/vente assistée), réutilise le même `CartPricingCalculator`, et trace explicitement l'agent à l'origine via `created_by_agent_id` (exposé côté client par `is_manual_order`).
+
+**`Boutique::canBeDeleted()` complété** : bloque désormais réellement la suppression d'une boutique référencée par une commande non terminale (`OrderItem` → commande dont le statut n'est ni `livre`, ni `annule`, ni `rembourse`) — l'implémentation provisoire du Sprint 2 (qui retournait toujours `true`) est levée.
+
+**Bug détecté et corrigé pendant la vérification manuelle** : `OrderStatus::allowedNextStatuses()` traitait "Livré" comme un statut terminal générique, ce qui rendait la transition `livre → rembourse` inatteignable (retour anticipé `[]` avant d'évaluer le cas spécifique du remboursement). Corrigé en distinguant explicitement `annule` (seul statut à débuter par un retour anticipé, vers `rembourse`) et `rembourse` (aucune suite) des autres statuts, "Livré" retombant alors dans le cas général qui ajoute bien `rembourse` à la liste des transitions autorisées. Détecté via un test HTTP manuel bout-en-bout (`PATCH .../status` en `rembourse` depuis `livre`), pas par les tests automatisés écrits après coup — un test de régression dédié (`OrderStatusTransitionerTest::test_refund_succeeds_with_a_note`) couvre désormais ce cas.
+
+**Tests** : 44 nouveaux tests (Unit : séquence des statuts, state machine — transitions légales/illégales, notes obligatoires, fenêtre d'annulation gratuite —, consolidation des frais de livraison ; Feature : panier — ajout/fusion/modification/suppression/isolation entre utilisateurs/produit ou boutique inactive —, commande client — passage de commande, annulation, isolation —, commandes admin — permissions par rôle, commande manuelle, transition de statut, filtre, remboursement —, `canBeDeleted` bloqué puis débloqué une fois la commande terminale) — 139 tests au total, tous verts. Style Pint conforme. Migrations validées sur PostgreSQL réel (`migrate:fresh` + seed).
+
+---
+
 ## 8. Points encore ouverts
 
 1. Détail fin des permissions par sous-action au sein de chaque module (la matrice CDC 7.5 est une synthèse ; la granularité complète sera affinée module par module au fil des sprints, avec validation à chaque fois).
 2. **Opérateur SMS pour l'envoi réel des OTP** : non précisé par le cahier des charges — à trancher avant mise en production (voir §7bis).
-3. **`Boutique::canBeDeleted()` à compléter** dès que le modèle Commande existe (Sprint 6) — pour l'instant la suppression n'est jamais bloquée par une commande active, faute de commandes (voir §7ter).
-4. Upload réel de logo/bannière boutique (actuellement de simples URL) — à raccorder au stockage S3/MinIO si un flux d'upload dédié est souhaité plutôt que de simples liens externes.
-5. **Un vrai `CatalogFetcher` par boutique** (scraping respectueux des CGU ou accord avec les boutiques) et **un vrai `TranslatorGateway`** — non spécifiés par le cahier des charges, à trancher avant mise en production (voir §7quater).
-6. Poids/volume produit non modélisés (choix Sprint 4 : grille de livraison par tranche de prix) — à réévaluer si une grille par poids/volume s'avère nécessaire plus tard (voir §7quinquies).
-7. **Délai de livraison affiché statique** (15–25 jours, non calculé) et **recherche/tri par prix en mémoire plutôt qu'en SQL** — deux limites techniques assumées à revisiter avec de vraies données logistiques (Sprint 8) et/ou un catalogue à plus grande échelle (voir §7sexies).
+3. Upload réel de logo/bannière boutique (actuellement de simples URL) — à raccorder au stockage S3/MinIO si un flux d'upload dédié est souhaité plutôt que de simples liens externes.
+4. **Un vrai `CatalogFetcher` par boutique** (scraping respectueux des CGU ou accord avec les boutiques) et **un vrai `TranslatorGateway`** — non spécifiés par le cahier des charges, à trancher avant mise en production (voir §7quater).
+5. Poids/volume produit non modélisés (choix Sprint 4 : grille de livraison par tranche de prix) — à réévaluer si une grille par poids/volume s'avère nécessaire plus tard (voir §7quinquies).
+6. **Délai de livraison affiché statique** (15–25 jours, non calculé) et **recherche/tri par prix en mémoire plutôt qu'en SQL** — deux limites techniques assumées à revisiter avec de vraies données logistiques (Sprint 8) et/ou un catalogue à plus grande échelle (voir §7sexies).
+7. **Frais d'annulation tardive marqués mais jamais prélevés** (`cancellation_fee_applicable = true`) : aucun montant ni mécanisme de prélèvement réel n'existe avant l'intégration du paiement (Sprint 7) — pour l'instant, la commande est juste signalée au service client pour traitement manuel (voir §7septies).

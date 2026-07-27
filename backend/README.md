@@ -44,8 +44,6 @@ Générée automatiquement depuis le code (`dedoc/scramble`) :
 - `GET /api/v1/boutiques` / `GET /api/v1/boutiques/{slug}` — catalogue public, boutiques actives uniquement
 - `GET/POST/PUT/DELETE /api/v1/admin/boutiques` + `PATCH /api/v1/admin/boutiques/{id}/status` — gestion complète (permission `boutiques.manage`, rôle `administrateur` uniquement)
 
-> **Note** : `Boutique::canBeDeleted()` retourne toujours `true` pour l'instant — la règle « pas de suppression si commande active » ne peut pas encore être appliquée, le modèle Commande arrivant au Sprint 6.
-
 ## Synchronisation catalogue (Sprint 3)
 
 - `POST /api/v1/admin/boutiques/{id}/sync` — déclenche une synchronisation immédiate (mise en file d'attente Redis)
@@ -78,6 +76,20 @@ Aucun prix EUR, URL ou référence de boutique source n'est jamais exposé sur c
 > **Notes** :
 > - Le filtrage par prix et la recherche par mot-clé (champ JSON bilingue) sont appliqués en mémoire après un premier filtrage SQL, pas entièrement en base — voir le docblock de `App\Services\Catalog\ProductSearchService`. Suffisant pour cette session, à revoir si le catalogue grossit significativement.
 > - Le délai de livraison affiché (`config('catalog.delivery_estimate_days_*')`) est une valeur statique, faute de données logistiques réelles avant le Sprint 8 — ce n'est **pas** une estimation calculée.
+
+## Panier & commande (Sprint 6)
+
+- `GET/POST/PUT/DELETE /api/v1/cart[/items/{id}]` — panier du client connecté (fusionne la quantité si la variante y est déjà, refuse un produit/boutique inactif)
+- `POST /api/v1/orders` — passage de commande depuis le panier (adresse + mode de paiement), historise taux de change/marge/frais par ligne, vide le panier
+- `GET /api/v1/orders`, `GET /api/v1/orders/{id}` — commandes du client connecté uniquement
+- `POST /api/v1/orders/{id}/cancel` — auto-annulation, réservée à la fenêtre gratuite (avant « Expédié par la boutique »)
+- `GET /api/v1/admin/orders` (filtrable par `status`/`user_id`/`boutique_id`), `GET .../{id}`, `PATCH .../{id}/status` — supervision globale et intervention manuelle sur le statut (permission `orders.manage_status`)
+- `POST /api/v1/admin/orders` — commande manuelle pour le compte d'un client, assistance téléphonique/vente assistée (permission `orders.create_for_client`), trace l'agent via `created_by_agent_id`
+
+> **Notes** :
+> - « Brouillon » (premier statut du CDC 8.4) n'est jamais atteint par le parcours normal : le panier joue déjà ce rôle avant le passage de commande, qui démarre directement à `paiement_en_attente`. Voir `App\Support\OrderStatus` et `docs/PLAN.md` §7septies.
+> - Les frais de livraison sont calculés **une seule fois** sur le sous-total agrégé du panier/de la commande (`App\Services\Pricing\CartPricingCalculator`), jamais sommés ligne par ligne (8.6).
+> - Une annulation au-delà de la fenêtre gratuite est marquée `cancellation_fee_applicable = true` mais **aucun montant n'est réellement prélevé** — le paiement n'est pas encore intégré (Sprint 7) ; la commande est simplement signalée pour traitement manuel par le service client.
 
 ## Tests
 

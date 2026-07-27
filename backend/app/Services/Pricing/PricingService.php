@@ -2,6 +2,7 @@
 
 namespace App\Services\Pricing;
 
+use App\DataTransferObjects\Pricing\ItemPriceBreakdown;
 use App\DataTransferObjects\Pricing\PriceBreakdown;
 use App\Exceptions\Pricing\MissingDeliveryFeeTierException;
 use App\Exceptions\Pricing\MissingExchangeRateException;
@@ -27,10 +28,41 @@ class PricingService
 {
     private const EXCHANGE_RATE_CACHE_TTL_SECONDS = 300;
 
+    /**
+     * Prix "à l'unité" d'une variante prise isolément (fiche produit,
+     * aperçu admin) : conversion + marge + frais de livraison calculés sur
+     * cette seule ligne. Pour une commande à plusieurs lignes, utiliser
+     * subtotalForVariant() par ligne puis deliveryFeeForAmount() une seule
+     * fois sur la somme (voir docblock d'ItemPriceBreakdown).
+     */
     public function priceForVariant(ProductVariant $variant, ?string $zone = null): PriceBreakdown
     {
-        $variant->loadMissing('product');
         $zone ??= config('pricing.default_zone');
+        $item = $this->subtotalForVariant($variant);
+        $deliveryFeeMru = $this->deliveryFeeForAmount($zone, $item->subtotalMru);
+        $finalPriceMru = round($item->subtotalMru + $deliveryFeeMru, 2);
+
+        return new PriceBreakdown(
+            basePriceEur: $item->basePriceEur,
+            currencyPair: $item->currencyPair,
+            exchangeRate: $item->exchangeRate,
+            convertedMru: $item->convertedMru,
+            marginPercent: $item->marginPercent,
+            marginSource: $item->marginSource,
+            marginAmountMru: $item->marginAmountMru,
+            deliveryZone: $zone,
+            deliveryFeeMru: $deliveryFeeMru,
+            finalPriceMru: $finalPriceMru,
+            computedAt: CarbonImmutable::now(),
+        );
+    }
+
+    /**
+     * Conversion + marge pour une variante, sans frais de livraison.
+     */
+    public function subtotalForVariant(ProductVariant $variant): ItemPriceBreakdown
+    {
+        $variant->loadMissing('product');
 
         $basePriceEur = (float) $variant->price_eur;
         $currencyPair = config('pricing.default_currency_pair');
@@ -43,10 +75,7 @@ class PricingService
         $marginAmountMru = round($convertedMru * $marginPercent / 100, 2);
         $subtotalMru = round($convertedMru + $marginAmountMru, 2);
 
-        $deliveryFeeMru = $this->resolveDeliveryFee($zone, $subtotalMru);
-        $finalPriceMru = round($subtotalMru + $deliveryFeeMru, 2);
-
-        return new PriceBreakdown(
+        return new ItemPriceBreakdown(
             basePriceEur: $basePriceEur,
             currencyPair: $currencyPair,
             exchangeRate: $exchangeRate,
@@ -54,11 +83,19 @@ class PricingService
             marginPercent: $marginPercent,
             marginSource: $marginSource,
             marginAmountMru: $marginAmountMru,
-            deliveryZone: $zone,
-            deliveryFeeMru: $deliveryFeeMru,
-            finalPriceMru: $finalPriceMru,
-            computedAt: CarbonImmutable::now(),
+            subtotalMru: $subtotalMru,
         );
+    }
+
+    public function deliveryFeeForAmount(string $zone, float $amount): float
+    {
+        $tier = DeliveryFeeTier::query()->forAmount($zone, $amount)->orderByDesc('min_price_mru')->first();
+
+        if ($tier === null) {
+            throw MissingDeliveryFeeTierException::forZone($zone, $amount);
+        }
+
+        return (float) $tier->fee_mru;
     }
 
     /**
@@ -121,16 +158,5 @@ class PricingService
         // Aucune règle "global" en base (ne devrait pas arriver en pratique,
         // PricingSeeder en crée une) : repli sur la config applicative.
         return [(float) config('pricing.default_margin_percent'), MarginScope::GLOBAL];
-    }
-
-    private function resolveDeliveryFee(string $zone, float $amount): float
-    {
-        $tier = DeliveryFeeTier::query()->forAmount($zone, $amount)->orderByDesc('min_price_mru')->first();
-
-        if ($tier === null) {
-            throw MissingDeliveryFeeTierException::forZone($zone, $amount);
-        }
-
-        return (float) $tier->fee_mru;
     }
 }
