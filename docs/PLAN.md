@@ -386,6 +386,23 @@ Exemple de référence (8.3.1) : 29,95 € × 47,50 MRU/€ = 1 422,63 MRU + 20 
 
 ---
 
+## 7duodecies bis. Interface d'administration React — connexion à l'API
+
+Le Sprint 0 avait livré un squelette React (navigation, i18n FR/AR, mise en page RTL) sans aucune page connectée à l'API — les onze sprints suivants ont porté exclusivement sur le backend. Ce travail complémentaire (hors découpage initial, demandé explicitement après coup) connecte ce squelette aux 96 opérations d'API déjà construites.
+
+**Authentification** : connexion e-mail/mot de passe (`AuthProvider`/`useAuth`, contexte React + TanStack Query), jeton JWT en `localStorage`, intercepteur axios centralisant l'en-tête `Authorization` et gérant le 401 (jeton expiré/invalide → purge + retour à `/login` ; le 403, lui, n'entraîne volontairement pas de déconnexion, qu'il s'agisse d'un compte bloqué ou d'un simple refus de permission sur une route donnée — les deux cas restent des erreurs affichées sur place, pas une invalidation de session). `ProtectedRoute` protège l'ensemble des pages ; la navigation se adapte au rôle réel de l'utilisateur connecté (`GET /me`) plutôt qu'à une liste statique — un service client ne voit ni Boutiques, ni Utilisateurs, ni Rôles, ni Rapports, cohérent avec la matrice de permissions (§4).
+
+**Six pages connectées** : Tableau de bord (avec bascule automatique niveau complet/limité, cf. Sprint 11), Boutiques (CRUD + changement de statut), Commandes (liste + détail + transition de statut, la validation de la transition restant entièrement côté API — le formulaire propose les 15 statuts et relaie tel quel le message d'erreur 422 en cas de transition invalide, sans dupliquer `OrderStatus::allowedNextStatuses()` en JavaScript), Paiements manuels (file d'attente + validation/refus/complément), Utilisateurs (recherche + blocage/déblocage), Rôles (création de compte interne + réattribution), Rapports (journal d'audit filtrable).
+
+**Vérification** : chaque page a été vérifiée en navigateur réel (Playwright, contre le backend et PostgreSQL réels, pas de mock) avant d'être considérée terminée — y compris des cas d'erreur volontaires (transition de statut invalide, accès refusé par rôle). Un bug de cache a été rencontré et corrigé pendant cette vérification : le cache de permissions Spatie (`PermissionRegistrar`), stocké dans Redis, n'était pas rafraîchi par un processus `php artisan serve` déjà démarré au moment d'un `migrate:fresh --seed` lancé depuis un autre processus — purement un artefact de l'environnement de vérification manuelle (`php artisan permission:cache-reset` après tout reseed résout le symptôme), pas un bug applicatif.
+
+**Limites signalées explicitement** :
+- **Bilinguisme incomplet** : le contenu des six pages connectées (libellés, formulaires, messages) est en français en dur, pas routé via `i18next` — seul le squelette hérité du Sprint 0 (navigation, en-tête, connexion) est réellement bilingue avec bascule RTL fonctionnelle. Vérifié en changeant la langue sur la page Commandes : la mise en page bascule bien en RTL mais le texte reste français. À corriger avant mise en production.
+- **Commande manuelle** (8.4.2) non construite côté admin — l'endpoint existe, le sélecteur d'articles nécessaire ne l'est pas.
+- Aucun test automatisé (unitaire/E2E) pour cette app — vérification manuelle uniquement, comme documenté dans `admin/README.md`.
+
+---
+
 ## 8. Points encore ouverts
 
 1. Détail fin des permissions par sous-action au sein de chaque module (la matrice CDC 7.5 est une synthèse ; la granularité complète sera affinée module par module au fil des sprints, avec validation à chaque fois).
@@ -406,3 +423,5 @@ Exemple de référence (8.3.1) : 29,95 € × 47,50 MRU/€ = 1 422,63 MRU + 20 
 16. **CA/marge du tableau de bord calculés sur `total_mru`/`margin_amount_mru_snapshot` avec les commandes annulées exclues et les remboursées incluses** : définition raisonnable mais non explicitement tranchée par le CDC, à confirmer si un besoin de reporting plus fin (net des remboursements, par exemple) se présente (voir §7duodecies).
 17. **`orders.delivery_zone` et `order_items.margin_amount_mru_snapshot` à `null` sur les commandes antérieures au Sprint 11** : ces commandes n'apparaissent pas dans les ventilations par zone/marge du tableau de bord tant qu'elles ne sont pas corrigées manuellement (voir §7duodecies).
 18. **Aucune donnée de coût logistique suivie** (transport 3PL, entrepôt Madrid, douane) : le tableau de bord ne peut donc calculer ni commission ni marge nette, seulement une marge brute — à ajouter si le suivi des coûts devient un besoin (voir §7duodecies).
+19. **Admin React : bilinguisme incomplet** — les six pages connectées à l'API (Sprint 11 bis) affichent leur contenu en français en dur, pas via `i18next` ; seul le squelette hérité du Sprint 0 (navigation, en-tête, connexion) est réellement bilingue FR/AR avec RTL fonctionnel. À corriger avant mise en production (voir §7duodecies bis).
+20. **Admin React : pas de commande manuelle** (8.4.2) ni de tests automatisés (unitaire/E2E) — vérification manuelle en navigateur uniquement pour cette app (voir §7duodecies bis).
