@@ -1,18 +1,4 @@
-/// Champ bilingue tel que renvoyé par l'API (`{"fr": "...", "ar": "..."}`).
-class LocalizedText {
-  const LocalizedText(this.values);
-
-  factory LocalizedText.fromJson(Map<String, dynamic> json) =>
-      LocalizedText(json.map((key, value) => MapEntry(key, value.toString())));
-
-  final Map<String, String> values;
-
-  String forLocale(String locale) => values[locale] ?? values.values.firstOrNull ?? '';
-}
-
-extension _FirstOrNull<T> on Iterable<T> {
-  T? get firstOrNull => isEmpty ? null : first;
-}
+import '../../../core/models/localized_text.dart';
 
 class Category {
   const Category({required this.id, required this.name, required this.slug, this.parentId});
