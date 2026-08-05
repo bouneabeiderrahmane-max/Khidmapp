@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'core/config/locale_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'routing/app_router.dart';
-
-final localeProvider = StateProvider<Locale>((ref) => const Locale('fr'));
 
 class KhidmappApp extends ConsumerWidget {
   const KhidmappApp({super.key});
@@ -13,11 +12,12 @@ class KhidmappApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final locale = ref.watch(localeProvider);
+    final router = ref.watch(routerProvider);
 
     return MaterialApp.router(
       onGenerateTitle: (context) => AppLocalizations.of(context).appName,
       theme: AppTheme.light(),
-      routerConfig: appRouter,
+      routerConfig: router,
       locale: locale,
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [
