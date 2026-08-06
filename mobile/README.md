@@ -28,6 +28,8 @@ flutter run --dart-define=API_BASE_URL=http://127.0.0.1:8000/api/v1
 flutter run --dart-define=API_BASE_URL=http://<IP_DU_POSTE>:8000/api/v1
 ```
 
+**Android — trafic HTTP en clair (dev local uniquement)** : depuis l'API 28, Android bloque par défaut le cleartext (HTTP non chiffré), ce qu'utilise forcément un backend local sans certificat. `android/app/src/debug/res/xml/network_security_config.xml` l'autorise, mais **seulement** vers l'IP en dur dans `env.dart` et **seulement** pour le build debug (jamais release) — si cette IP change, mettre à jour les deux fichiers ensemble.
+
 ## Ce qui est connecté à l'API réelle
 
 - **Authentification** (`/login`) : connexion par OTP téléphone (`POST /auth/otp/request` puis `/auth/otp/verify`), jeton JWT en stockage sécurisé (`flutter_secure_storage`), auto-inscription au premier code vérifié (comportement de l'API).

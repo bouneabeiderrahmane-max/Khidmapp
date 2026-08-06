@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Autorise le trafic HTTP en clair (cleartext) uniquement vers l'IP locale
+  du backend de développement (voir lib/core/config/env.dart) — Android
+  bloque le cleartext par défaut depuis l'API 28. Ce fichier ne fait
+  partie que du build DEBUG (android/app/src/debug/), jamais du build
+  release : aucun assouplissement de sécurité en production.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">192.168.100.194</domain>
+    </domain-config>
+</network-security-config>
