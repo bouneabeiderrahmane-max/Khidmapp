@@ -15,10 +15,17 @@ flutter gen-l10n   # régénère lib/l10n/generated à partir des fichiers ARB
 flutter run
 ```
 
-L'URL de l'API est configurable au lancement :
+L'URL de l'API par défaut (`lib/core/config/env.dart`) pointe vers l'IP Wi-Fi locale du poste de développement, pour tester depuis un téléphone physique sur le même réseau. Elle est configurable au lancement, à surcharger selon la cible :
 
 ```bash
+# Émulateur Android (alias spécial vers le localhost de l'hôte)
 flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000/api/v1
+
+# Simulateur iOS (le localhost de l'hôte y est directement joignable)
+flutter run --dart-define=API_BASE_URL=http://127.0.0.1:8000/api/v1
+
+# Téléphone physique sur le même Wi-Fi que le poste de développement
+flutter run --dart-define=API_BASE_URL=http://<IP_DU_POSTE>:8000/api/v1
 ```
 
 ## Ce qui est connecté à l'API réelle
