@@ -116,5 +116,30 @@
   "devSettingsCurrentlyUsed": "Actuellement utilisée : {url}",
   "@devSettingsCurrentlyUsed": {
     "placeholders": { "url": {} }
-  }
+  },
+  "cartEmpty": "Votre panier est vide",
+  "cartRemove": "Retirer",
+  "cartSubtotal": "Sous-total",
+  "cartDeliveryFee": "Frais de livraison",
+  "cartTotal": "Total",
+  "cartCheckout": "Passer la commande",
+  "checkoutTitle": "Confirmer la commande",
+  "checkoutAddress": "Adresse de livraison",
+  "checkoutPaymentMethod": "Mode de paiement",
+  "checkoutPaymentBankily": "Bankily",
+  "checkoutPaymentManual": "Virement manuel",
+  "checkoutConfirm": "Confirmer la commande",
+  "checkoutRequireLogin": "Connectez-vous pour passer une commande.",
+  "checkoutNeedAddress": "Ajoutez d'abord une adresse dans votre compte (onglet Compte) pour pouvoir commander.",
+  "checkoutBankilyInstructions": "Confirmez le paiement dans votre application Bankily pour finaliser votre commande.",
+  "checkoutManualInstructions": "Votre commande est enregistrée. Notre service client vous contactera pour le paiement manuel.",
+  "checkoutSuccessTitle": "Commande confirmée",
+  "ordersEmpty": "Aucune commande pour l'instant",
+  "orderItemsTitle": "Articles",
+  "orderStatusHistoryTitle": "Historique",
+  "orderPaymentsTitle": "Paiements",
+  "orderCancel": "Annuler la commande",
+  "orderCancelReasonHint": "Motif (optionnel)",
+  "orderCancelConfirm": "Confirmer l'annulation",
+  "orderCancelled": "Commande annulée."
 }

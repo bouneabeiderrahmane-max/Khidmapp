@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../l10n/generated/app_localizations.dart';
-import '../../orders/data/order_summary_repository.dart';
+import '../../orders/application/order_providers.dart';
 import '../application/support_providers.dart';
 import '../data/support_models.dart';
 import '../data/support_repository.dart';
@@ -61,7 +61,7 @@ class _NewComplaintPageState extends ConsumerState<NewComplaintPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final ordersAsync = ref.watch(_myOrdersProvider);
+    final ordersAsync = ref.watch(myOrdersProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.supportNewComplaint)),
@@ -120,7 +120,3 @@ class _NewComplaintPageState extends ConsumerState<NewComplaintPage> {
     );
   }
 }
-
-final _myOrdersProvider = FutureProvider((ref) {
-  return ref.watch(orderSummaryRepositoryProvider).fetchMyOrders();
-});

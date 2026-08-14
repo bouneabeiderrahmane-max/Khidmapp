@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../features/account/presentation/account_page.dart';
 import '../features/auth/presentation/login_page.dart';
+import '../features/cart/presentation/cart_page.dart';
+import '../features/cart/presentation/checkout_page.dart';
 import '../features/catalog/presentation/catalog_page.dart';
 import '../features/catalog/presentation/product_detail_page.dart';
 import '../features/custom_order/presentation/custom_order_detail_page.dart';
@@ -10,7 +12,8 @@ import '../features/custom_order/presentation/custom_order_list_page.dart';
 import '../features/custom_order/presentation/new_custom_order_page.dart';
 import '../features/dev_settings/presentation/dev_settings_page.dart';
 import '../features/home/presentation/home_page.dart';
-import '../features/placeholder/placeholder_page.dart';
+import '../features/orders/presentation/order_detail_page.dart';
+import '../features/orders/presentation/orders_list_page.dart';
 import '../features/shell/home_shell.dart';
 import '../features/support/presentation/complaint_detail_page.dart';
 import '../features/support/presentation/new_complaint_page.dart';
@@ -51,6 +54,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) =>
             CustomOrderDetailPage(requestId: int.parse(state.pathParameters['id']!)),
       ),
+      GoRoute(path: '/checkout', builder: (context, state) => const CheckoutPage()),
+      GoRoute(
+        path: '/orders/:id',
+        builder: (context, state) => OrderDetailPage(orderId: int.parse(state.pathParameters['id']!)),
+      ),
       GoRoute(
         path: '/support/new-complaint',
         builder: (context, state) => const NewComplaintPage(),
@@ -71,20 +79,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [GoRoute(path: '/catalog', builder: (context, state) => const CatalogPage())],
           ),
           StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/cart',
-                builder: (context, state) => const PlaceholderPage(title: 'Panier'),
-              ),
-            ],
+            routes: [GoRoute(path: '/cart', builder: (context, state) => const CartPage())],
           ),
           StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/orders',
-                builder: (context, state) => const PlaceholderPage(title: 'Commandes'),
-              ),
-            ],
+            routes: [GoRoute(path: '/orders', builder: (context, state) => const OrdersListPage())],
           ),
           StatefulShellBranch(
             routes: [GoRoute(path: '/support', builder: (context, state) => const SupportPage())],

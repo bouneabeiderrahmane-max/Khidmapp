@@ -116,5 +116,30 @@
   "devSettingsCurrentlyUsed": "المستخدم حالياً: {url}",
   "@devSettingsCurrentlyUsed": {
     "placeholders": { "url": {} }
-  }
+  },
+  "cartEmpty": "سلتك فارغة",
+  "cartRemove": "إزالة",
+  "cartSubtotal": "المجموع الفرعي",
+  "cartDeliveryFee": "رسوم التوصيل",
+  "cartTotal": "المجموع",
+  "cartCheckout": "إتمام الطلب",
+  "checkoutTitle": "تأكيد الطلب",
+  "checkoutAddress": "عنوان التسليم",
+  "checkoutPaymentMethod": "طريقة الدفع",
+  "checkoutPaymentBankily": "بنكيلي",
+  "checkoutPaymentManual": "تحويل يدوي",
+  "checkoutConfirm": "تأكيد الطلب",
+  "checkoutRequireLogin": "سجّل الدخول لإتمام الطلب.",
+  "checkoutNeedAddress": "أضف عنواناً أولاً من حسابك (تبويب الحساب) لتتمكن من الطلب.",
+  "checkoutBankilyInstructions": "أكّد الدفع في تطبيق بنكيلي الخاص بك لإتمام طلبك.",
+  "checkoutManualInstructions": "تم تسجيل طلبك. سيتواصل معك فريق خدمة العملاء بخصوص الدفع اليدوي.",
+  "checkoutSuccessTitle": "تم تأكيد الطلب",
+  "ordersEmpty": "لا توجد طلبات حتى الآن",
+  "orderItemsTitle": "المنتجات",
+  "orderStatusHistoryTitle": "السجل",
+  "orderPaymentsTitle": "المدفوعات",
+  "orderCancel": "إلغاء الطلب",
+  "orderCancelReasonHint": "السبب (اختياري)",
+  "orderCancelConfirm": "تأكيد الإلغاء",
+  "orderCancelled": "تم إلغاء الطلب."
 }
