@@ -29,15 +29,22 @@ use Illuminate\Support\Str;
  */
 class DemoBoutiqueSeeder extends Seeder
 {
+    /**
+     * `logo_url` pointe vers logo.clearbit.com (service public gratuit qui
+     * sert le logo d'une marque à partir de son nom de domaine) —
+     * commodité de développement/test uniquement, au même titre que ce
+     * seeder dans son ensemble ; pas une source d'assets pour la
+     * production.
+     */
     private const DEMO_BOUTIQUES = [
-        ['name' => 'Zara España', 'base_url' => 'https://www.zara.com/es/'],
-        ['name' => 'Amazon.es', 'base_url' => 'https://www.amazon.es/'],
-        ['name' => 'Decathlon España', 'base_url' => 'https://www.decathlon.es/'],
-        ['name' => 'El Corte Inglés', 'base_url' => 'https://www.elcorteingles.es/'],
-        ['name' => 'Mango España', 'base_url' => 'https://shop.mango.com/es'],
-        ['name' => 'Bershka', 'base_url' => 'https://www.bershka.com/es/'],
-        ['name' => 'Nike España', 'base_url' => 'https://www.nike.com/es/'],
-        ['name' => 'MediaMarkt España', 'base_url' => 'https://www.mediamarkt.es/'],
+        ['name' => 'Zara España', 'base_url' => 'https://www.zara.com/es/', 'logo_domain' => 'zara.com'],
+        ['name' => 'Amazon.es', 'base_url' => 'https://www.amazon.es/', 'logo_domain' => 'amazon.es'],
+        ['name' => 'Decathlon España', 'base_url' => 'https://www.decathlon.es/', 'logo_domain' => 'decathlon.es'],
+        ['name' => 'El Corte Inglés', 'base_url' => 'https://www.elcorteingles.es/', 'logo_domain' => 'elcorteingles.es'],
+        ['name' => 'Mango España', 'base_url' => 'https://shop.mango.com/es', 'logo_domain' => 'mango.com'],
+        ['name' => 'Bershka', 'base_url' => 'https://www.bershka.com/es/', 'logo_domain' => 'bershka.com'],
+        ['name' => 'Nike España', 'base_url' => 'https://www.nike.com/es/', 'logo_domain' => 'nike.com'],
+        ['name' => 'MediaMarkt España', 'base_url' => 'https://www.mediamarkt.es/', 'logo_domain' => 'mediamarkt.es'],
     ];
 
     public function run(): void
@@ -48,6 +55,7 @@ class DemoBoutiqueSeeder extends Seeder
                 [
                     'name' => $boutique['name'],
                     'base_url' => $boutique['base_url'],
+                    'logo_url' => 'https://logo.clearbit.com/'.$boutique['logo_domain'],
                     'country_code' => 'ES',
                     'currency_code' => 'EUR',
                     'status' => BoutiqueStatus::ACTIVE,

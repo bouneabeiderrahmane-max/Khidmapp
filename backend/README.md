@@ -19,11 +19,13 @@ php artisan db:seed   # rôles/permissions + 8 boutiques de référence (statut 
 php artisan serve
 ```
 
-> **Catalogue/boutiques vide au premier lancement ?** `BoutiqueSeeder` (appelé par `db:seed`) crée bien 8 boutiques réelles (Zara, Mango, Bershka…) mais au statut `en_test` — volontairement, tant qu'aucune vraie synchronisation catalogue n'existe (voir son docblock, CDC 8.1.2). L'endpoint public `GET /boutiques` ne renvoie que les boutiques `active`, donc le catalogue et l'accueil de l'app mobile paraissent vides. Pour du test/développement local, lancer en plus :
+> **Catalogue/boutiques vide au premier lancement ?** `BoutiqueSeeder` (appelé par `db:seed`) crée bien 8 boutiques réelles (Zara, Mango, Bershka…) mais au statut `en_test` — volontairement, tant qu'aucune vraie synchronisation catalogue n'existe (voir son docblock, CDC 8.1.2). L'endpoint public `GET /boutiques` ne renvoie que les boutiques `active`, donc le catalogue et l'accueil de l'app mobile paraissent vides — et même une fois les boutiques visibles, aucun produit n'existe encore (aucun `ProductSeeder` n'est appelé par défaut). Pour du test/développement local, lancer en plus (⚠️ **exécuter depuis le dossier `backend/`**, là où se trouve `artisan` — pas depuis la racine du dépôt) :
 > ```bash
 > php artisan db:seed --class=DemoBoutiqueSeeder
+> php artisan db:seed --class=DemoProductSeeder
 > ```
-> Ce seeder à part (jamais appelé automatiquement) force 8 boutiques réelles et reconnaissables (Zara España, Amazon.es, Decathlon España, El Corte Inglés, Mango España, Bershka, Nike España, MediaMarkt España) au statut `active` — y compris en repromouvant celles déjà créées par `BoutiqueSeeder`.
+> - `DemoBoutiqueSeeder` (jamais appelé automatiquement) force 8 boutiques réelles et reconnaissables (Zara España, Amazon.es, Decathlon España, El Corte Inglés, Mango España, Bershka, Nike España, MediaMarkt España), avec logo (`logo.clearbit.com`, commodité dev uniquement), au statut `active` — y compris en repromouvant celles déjà créées par `BoutiqueSeeder`.
+> - `DemoProductSeeder` (dépend du précédent) ajoute ~2 produits par boutique (avec variantes taille/couleur et prix) pour que tapoter une boutique depuis l'app affiche vraiment quelque chose. Sans images produit, comme documenté depuis le Sprint 3.
 
 ## Documentation API
 
