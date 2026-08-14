@@ -35,6 +35,18 @@ class CustomOrderRepository {
     );
     return CustomOrderRequest.fromJson(response.data['data'] as Map<String, dynamic>);
   }
+
+  /// Aperçu instantané du prix en MRU (marge incluse) pour un prix EUR que
+  /// le client vient de lire sur le vrai site externe d'une boutique — le
+  /// client ne doit jamais voir un prix EUR seul, sans son équivalent en
+  /// MRU (règle transverse). Endpoint public, aucun état créé.
+  Future<double> previewPriceMru({required double priceEur, int? boutiqueId}) async {
+    final response = await _dio.get(
+      '/custom-order-price-preview',
+      queryParameters: {'price_eur': priceEur, if (boutiqueId != null) 'boutique_id': boutiqueId},
+    );
+    return num.parse(response.data['data']['subtotal_mru'].toString()).toDouble();
+  }
 }
 
 final customOrderRepositoryProvider = Provider<CustomOrderRepository>((ref) {

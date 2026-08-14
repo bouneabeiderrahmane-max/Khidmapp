@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -207,7 +209,7 @@ class _NewCustomOrderPageState extends ConsumerState<NewCustomOrderPage> {
   }
 }
 
-class _ItemCard extends StatelessWidget {
+class _ItemCard extends ConsumerStatefulWidget {
   const _ItemCard({
     required this.index,
     required this.item,
@@ -225,6 +227,51 @@ class _ItemCard extends StatelessWidget {
   final VoidCallback onChanged;
 
   @override
+  ConsumerState<_ItemCard> createState() => _ItemCardState();
+}
+
+class _ItemCardState extends ConsumerState<_ItemCard> {
+  Timer? _debounce;
+  double? _previewMru;
+  bool _isPreviewLoading = false;
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  /// Interroge /custom-order-price-preview 500 ms après la dernière frappe
+  /// (évite une requête par caractère saisi) pour afficher tout de suite
+  /// l'équivalent MRU (marge incluse) du prix EUR que le client vient de
+  /// lire sur le vrai site externe de la boutique — le client ne doit
+  /// jamais voir un prix EUR sans son équivalent MRU (règle transverse).
+  void _schedulePreview() {
+    _debounce?.cancel();
+    final priceEur = double.tryParse(widget.item.priceController.text.trim().replaceAll(',', '.'));
+
+    if (priceEur == null || priceEur <= 0) {
+      setState(() => _previewMru = null);
+      return;
+    }
+
+    _debounce = Timer(const Duration(milliseconds: 500), () async {
+      setState(() => _isPreviewLoading = true);
+      try {
+        final mru = await ref
+            .read(customOrderRepositoryProvider)
+            .previewPriceMru(priceEur: priceEur, boutiqueId: widget.item.boutiqueId);
+        if (mounted) setState(() => _previewMru = mru);
+      } catch (_) {
+        // Aperçu non bloquant : le prix reste saisissable même hors ligne.
+        if (mounted) setState(() => _previewMru = null);
+      } finally {
+        if (mounted) setState(() => _isPreviewLoading = false);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
@@ -237,43 +284,44 @@ class _ItemCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text('#${index + 1}', style: Theme.of(context).textTheme.titleSmall),
+                Text('#${widget.index + 1}', style: Theme.of(context).textTheme.titleSmall),
                 const Spacer(),
-                if (canRemove)
+                if (widget.canRemove)
                   IconButton(
                     icon: const Icon(Icons.delete_outline),
-                    onPressed: onRemove,
+                    onPressed: widget.onRemove,
                     tooltip: l10n.customOrderRemoveProduct,
                   ),
               ],
             ),
-            if (boutiques.isNotEmpty)
+            if (widget.boutiques.isNotEmpty)
               DropdownButtonFormField<int?>(
-                initialValue: item.boutiqueId,
+                initialValue: widget.item.boutiqueId,
                 decoration: InputDecoration(labelText: l10n.customOrderBoutique),
                 items: [
                   const DropdownMenuItem<int?>(value: null, child: Text('—')),
-                  for (final boutique in boutiques)
+                  for (final boutique in widget.boutiques)
                     DropdownMenuItem<int?>(value: boutique.id, child: Text(boutique.name)),
                 ],
                 onChanged: (value) {
-                  item.boutiqueId = value;
-                  onChanged();
+                  widget.item.boutiqueId = value;
+                  widget.onChanged();
+                  _schedulePreview();
                 },
               ),
             const SizedBox(height: 8),
             TextField(
-              controller: item.productUrlController,
+              controller: widget.item.productUrlController,
               keyboardType: TextInputType.url,
               decoration: InputDecoration(labelText: l10n.customOrderProductUrl),
-              onChanged: (_) => onChanged(),
+              onChanged: (_) => widget.onChanged(),
             ),
             const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
                   child: TextField(
-                    controller: item.quantityController,
+                    controller: widget.item.quantityController,
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(labelText: l10n.customOrderQuantity),
                   ),
@@ -281,17 +329,39 @@ class _ItemCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: TextField(
-                    controller: item.priceController,
+                    controller: widget.item.priceController,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     decoration: InputDecoration(labelText: l10n.customOrderEstimatedPrice),
-                    onChanged: (_) => onChanged(),
+                    onChanged: (_) {
+                      widget.onChanged();
+                      _schedulePreview();
+                    },
                   ),
                 ),
               ],
             ),
+            if (_isPreviewLoading || _previewMru != null) ...[
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsetsDirectional.only(start: 4),
+                child: _isPreviewLoading
+                    ? const SizedBox(
+                        height: 12,
+                        width: 12,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(
+                        l10n.customOrderPricePreview(_previewMru!.toStringAsFixed(2)),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+              ),
+            ],
             const SizedBox(height: 8),
             TextField(
-              controller: item.notesController,
+              controller: widget.item.notesController,
               decoration: InputDecoration(labelText: l10n.customOrderNotes),
             ),
           ],

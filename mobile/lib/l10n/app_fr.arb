@@ -77,6 +77,7 @@
   "homeSearchBoutique": "Rechercher une boutique",
   "homeBoutiquesTitle": "Nos boutiques",
   "homeBoutiquesEmpty": "Aucune boutique ne correspond à cette recherche",
+  "homeCannotOpenBoutique": "Impossible d'ouvrir le site de cette boutique",
   "homeCustomOrderCta": "Commande personnalisée",
   "homeCustomOrderSubtitle": "Trouvé un produit ailleurs ? Envoyez-nous le lien, nous nous occupons du reste.",
   "homeMyCustomOrders": "Mes commandes personnalisées",
@@ -87,6 +88,10 @@
   "customOrderProductUrl": "Lien du produit",
   "customOrderQuantity": "Quantité",
   "customOrderEstimatedPrice": "Prix affiché (EUR)",
+  "customOrderPricePreview": "≈ {mru} MRU (marge Khidmapp incluse)",
+  "@customOrderPricePreview": {
+    "placeholders": { "mru": {} }
+  },
   "customOrderNotes": "Notes (taille, couleur…)",
   "customOrderAddProduct": "Ajouter un autre produit",
   "customOrderRemoveProduct": "Retirer",

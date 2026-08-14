@@ -7,6 +7,7 @@ class BoutiqueSummary {
     required this.id,
     required this.name,
     required this.slug,
+    required this.baseUrl,
     this.logoUrl,
     this.countryCode,
   });
@@ -15,6 +16,7 @@ class BoutiqueSummary {
     id: json['id'] as int,
     name: json['name'] as String,
     slug: json['slug'] as String,
+    baseUrl: json['base_url'] as String,
     logoUrl: json['logo_url'] as String?,
     countryCode: json['country_code'] as String?,
   );
@@ -22,6 +24,7 @@ class BoutiqueSummary {
   final int id;
   final String name;
   final String slug;
+  final String baseUrl;
   final String? logoUrl;
   final String? countryCode;
 }

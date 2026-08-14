@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BoutiqueController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CustomOrderPricePreviewController;
 use App\Http\Controllers\FaqController;
 use App\Http\Controllers\Payment\BankilyWebhookController;
 use App\Http\Controllers\ProductController;
@@ -58,6 +59,7 @@ Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{product}', [ProductController::class, 'show']);
 Route::get('/faqs', [FaqController::class, 'index']);
+Route::get('/custom-order-price-preview', CustomOrderPricePreviewController::class);
 
 Route::middleware(['auth:api', 'can:boutiques.manage'])->prefix('admin')->group(function () {
     Route::apiResource('boutiques', AdminBoutiqueController::class);

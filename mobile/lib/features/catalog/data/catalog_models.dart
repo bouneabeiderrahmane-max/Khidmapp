@@ -116,11 +116,10 @@ class ProductDetail {
 }
 
 class CatalogFilters {
-  const CatalogFilters({this.query, this.categorySlug, this.boutiqueSlug, this.sort, this.page = 1});
+  const CatalogFilters({this.query, this.categorySlug, this.sort, this.page = 1});
 
   final String? query;
   final String? categorySlug;
-  final String? boutiqueSlug;
   final String? sort;
   final int page;
 
@@ -129,15 +128,12 @@ class CatalogFilters {
     bool clearQuery = false,
     String? categorySlug,
     bool clearCategory = false,
-    String? boutiqueSlug,
-    bool clearBoutique = false,
     String? sort,
     int? page,
   }) {
     return CatalogFilters(
       query: clearQuery ? null : (query ?? this.query),
       categorySlug: clearCategory ? null : (categorySlug ?? this.categorySlug),
-      boutiqueSlug: clearBoutique ? null : (boutiqueSlug ?? this.boutiqueSlug),
       sort: sort ?? this.sort,
       page: page ?? this.page,
     );
@@ -146,7 +142,6 @@ class CatalogFilters {
   Map<String, dynamic> toQueryParams() => {
     if (query != null && query!.isNotEmpty) 'q': query,
     if (categorySlug != null) 'category': categorySlug,
-    if (boutiqueSlug != null) 'boutique': boutiqueSlug,
     if (sort != null) 'sort': sort,
     'page': page,
   };
