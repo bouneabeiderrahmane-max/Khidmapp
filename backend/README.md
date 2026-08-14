@@ -15,9 +15,15 @@ composer install
 php artisan key:generate
 php artisan jwt:secret
 php artisan migrate
-php artisan db:seed   # rôles/permissions (client, service_client, administrateur)
+php artisan db:seed   # rôles/permissions + 8 boutiques de référence (statut "en_test", invisibles côté client — voir note ci-dessous) + tarification
 php artisan serve
 ```
+
+> **Catalogue/boutiques vide au premier lancement ?** `BoutiqueSeeder` (appelé par `db:seed`) crée bien 8 boutiques réelles (Zara, Mango, Bershka…) mais au statut `en_test` — volontairement, tant qu'aucune vraie synchronisation catalogue n'existe (voir son docblock, CDC 8.1.2). L'endpoint public `GET /boutiques` ne renvoie que les boutiques `active`, donc le catalogue et l'accueil de l'app mobile paraissent vides. Pour du test/développement local, lancer en plus :
+> ```bash
+> php artisan db:seed --class=DemoBoutiqueSeeder
+> ```
+> Ce seeder à part (jamais appelé automatiquement) force 8 boutiques réelles et reconnaissables (Zara España, Amazon.es, Decathlon España, El Corte Inglés, Mango España, Bershka, Nike España, MediaMarkt España) au statut `active` — y compris en repromouvant celles déjà créées par `BoutiqueSeeder`.
 
 ## Documentation API
 
