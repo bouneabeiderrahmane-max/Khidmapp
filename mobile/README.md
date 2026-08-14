@@ -15,7 +15,7 @@ flutter gen-l10n   # régénère lib/l10n/generated à partir des fichiers ARB
 flutter run
 ```
 
-L'URL de l'API par défaut (`lib/core/config/env.dart`) pointe vers l'IP Wi-Fi locale du poste de développement, pour tester depuis un téléphone physique sur le même réseau. Elle est configurable au lancement, à surcharger selon la cible :
+L'URL de l'API par défaut (`lib/core/config/env.dart`) est une simple valeur de repli, configurable au lancement (`--dart-define=API_BASE_URL=...`) ou à la compilation. Puisqu'elle change à chaque réseau Wi-Fi lorsqu'on teste depuis un téléphone physique, **le plus simple en debug est de ne pas y toucher et de la changer directement depuis l'application** — voir "Paramètres développeur" ci-dessous.
 
 ```bash
 # Émulateur Android (alias spécial vers le localhost de l'hôte)
@@ -28,7 +28,17 @@ flutter run --dart-define=API_BASE_URL=http://127.0.0.1:8000/api/v1
 flutter run --dart-define=API_BASE_URL=http://<IP_DU_POSTE>:8000/api/v1
 ```
 
-**Android — trafic HTTP en clair (dev local uniquement)** : depuis l'API 28, Android bloque par défaut le cleartext (HTTP non chiffré), ce qu'utilise forcément un backend local sans certificat. `android/app/src/debug/res/xml/network_security_config.xml` l'autorise, mais **seulement** vers l'IP en dur dans `env.dart` et **seulement** pour le build debug (jamais release) — si cette IP change, mettre à jour les deux fichiers ensemble.
+### Paramètres développeur — changer l'URL de l'API depuis le téléphone (debug uniquement)
+
+Plus besoin de modifier le code ni de reconstruire l'APK à chaque changement d'IP : en build **debug** uniquement (absent d'un build release — voir plus bas), l'onglet **Compte** affiche une entrée **"Paramètres développeur"** tout en bas de l'écran (visible connecté ou non). Elle ouvre un formulaire avec :
+
+1. Un champ **"URL de base de l'API"**, pré-rempli avec la valeur actuellement utilisée (ex. `http://192.168.1.100:8000/api/v1`) — remplacez l'IP par celle de votre poste sur le réseau courant (`ipconfig`/`ifconfig`), en gardant `:8000/api/v1` à la fin.
+2. **Enregistrer** : la nouvelle URL est aussitôt utilisée par tous les appels API (aucun redémarrage de l'app nécessaire — le client HTTP est reconstruit automatiquement) et persistée en stockage sécurisé (`flutter_secure_storage`), donc conservée après fermeture de l'app.
+3. **Réinitialiser à la valeur par défaut** : efface la valeur enregistrée et revient à `Env.apiBaseUrl` (`lib/core/config/env.dart`).
+
+Implémentation : `lib/core/config/dev_settings.dart` (le provider `apiBaseUrlProvider`, dont dépend `apiClientProvider`, réagit au changement comme il réagit déjà à la langue) et `lib/features/dev_settings/`. Cette entrée et cette route ne sont compilées que si `kDebugMode` est vrai — un utilisateur final en build release ne les voit jamais et ne peut pas non plus y accéder par un lien profond, la route elle-même étant absente de la table de routes release.
+
+**Android — trafic HTTP en clair (dev local uniquement)** : depuis l'API 28, Android bloque par défaut le cleartext (HTTP non chiffré), ce qu'utilise forcément un backend local sans certificat. `android/app/src/debug/res/xml/network_security_config.xml` l'autorise pour **tout le trafic**, mais **seulement** pour le build debug (jamais release) — volontairement large plutôt que limité à une IP fixe : Android ne supporte pas les plages CIDR (`192.168.0.0/16`) dans ce fichier, seulement des IP littérales exactes, ce qui aurait de toute façon obligé à modifier ce fichier (et donc reconstruire l'APK) à chaque changement de réseau — exactement ce que "Paramètres développeur" ci-dessus permet d'éviter pour l'URL elle-même.
 
 ## Ce qui est connecté à l'API réelle
 

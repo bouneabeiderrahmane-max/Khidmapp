@@ -104,5 +104,17 @@
     "placeholders": { "id": {} }
   },
   "customOrderRequireLogin": "سجّل الدخول لإرسال طلب منتج مخصص.",
-  "customOrderNeedAddress": "أضف عنواناً أولاً من حسابك (تبويب الحساب) لتتمكن من الطلب."
+  "customOrderNeedAddress": "أضف عنواناً أولاً من حسابك (تبويب الحساب) لتتمكن من الطلب.",
+  "accountDevSettings": "إعدادات المطوّر",
+  "devSettingsTitle": "إعدادات المطوّر",
+  "devSettingsApiBaseUrl": "عنوان الـ API الأساسي",
+  "devSettingsHint": "مثال: http://192.168.1.100:8000/api/v1",
+  "devSettingsSave": "حفظ",
+  "devSettingsReset": "إعادة الضبط إلى القيمة الافتراضية",
+  "devSettingsSaved": "تم حفظ العنوان وتطبيقه فوراً.",
+  "devSettingsInvalidUrl": "عنوان غير صالح (يجب أن يبدأ بـ http:// أو https://)",
+  "devSettingsCurrentlyUsed": "المستخدم حالياً: {url}",
+  "@devSettingsCurrentlyUsed": {
+    "placeholders": { "url": {} }
+  }
 }

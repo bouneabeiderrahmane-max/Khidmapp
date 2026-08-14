@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -18,46 +19,62 @@ class AccountPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.navAccount)),
-      body: authState.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text(apiErrorMessage(error))),
-        data: (user) {
-          if (user == null) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(l10n.accountNotConnected),
-                  const SizedBox(height: 12),
-                  FilledButton(
-                    onPressed: () => context.push('/login'),
-                    child: Text(l10n.accountLogin),
-                  ),
-                ],
-              ),
-            );
-          }
+      body: Column(
+        children: [
+          Expanded(
+            child: authState.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, _) => Center(child: Text(apiErrorMessage(error))),
+              data: (user) {
+                if (user == null) {
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(l10n.accountNotConnected),
+                        const SizedBox(height: 12),
+                        FilledButton(
+                          onPressed: () => context.push('/login'),
+                          child: Text(l10n.accountLogin),
+                        ),
+                      ],
+                    ),
+                  );
+                }
 
-          return ListView(
-            children: [
-              ListTile(
-                leading: const CircleAvatar(child: Icon(Icons.person)),
-                title: Text(user.name),
-                subtitle: Text(user.phone ?? user.email ?? ''),
-              ),
-              const Divider(),
-              const _AddressesSection(),
-              const Divider(),
-              const _NotificationPreferencesSection(),
-              const Divider(),
-              ListTile(
-                leading: const Icon(Icons.logout),
-                title: Text(l10n.accountLogout),
-                onTap: () => ref.read(authControllerProvider.notifier).logout(),
-              ),
-            ],
-          );
-        },
+                return ListView(
+                  children: [
+                    ListTile(
+                      leading: const CircleAvatar(child: Icon(Icons.person)),
+                      title: Text(user.name),
+                      subtitle: Text(user.phone ?? user.email ?? ''),
+                    ),
+                    const Divider(),
+                    const _AddressesSection(),
+                    const Divider(),
+                    const _NotificationPreferencesSection(),
+                    const Divider(),
+                    ListTile(
+                      leading: const Icon(Icons.logout),
+                      title: Text(l10n.accountLogout),
+                      onTap: () => ref.read(authControllerProvider.notifier).logout(),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+          // Debug uniquement (voir kDebugMode) : jamais compilé dans un
+          // build release, donc jamais visible pour un utilisateur final.
+          if (kDebugMode) ...[
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.developer_mode_outlined),
+              title: Text(l10n.accountDevSettings),
+              onTap: () => context.push('/dev-settings'),
+            ),
+          ],
+        ],
       ),
     );
   }

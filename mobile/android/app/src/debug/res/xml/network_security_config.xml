@@ -1,13 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Autorise le trafic HTTP en clair (cleartext) uniquement vers l'IP locale
-  du backend de développement (voir lib/core/config/env.dart) — Android
-  bloque le cleartext par défaut depuis l'API 28. Ce fichier ne fait
-  partie que du build DEBUG (android/app/src/debug/), jamais du build
-  release : aucun assouplissement de sécurité en production.
+  Autorise tout le trafic HTTP en clair (cleartext) pour le build DEBUG
+  uniquement (android/app/src/debug/) — jamais pour le build release,
+  aucun assouplissement de sécurité en production.
+
+  Volontairement large (<base-config> plutôt qu'un <domain-config> limité
+  à une IP) : Android ne supporte pas les plages CIDR (ex. 192.168.0.0/16)
+  dans network_security_config.xml, seulement des noms de domaine ou des
+  adresses IP littérales exactes. Comme l'IP du poste de développement
+  change à chaque réseau Wi-Fi (voir DevSettingsPage, lib/core/config/
+  dev_settings.dart, qui permet de changer l'URL de base depuis
+  l'application sans recompiler), une règle par IP unique obligerait à
+  modifier ce fichier — et donc à reconstruire l'APK — à chaque
+  changement de réseau.
 -->
 <network-security-config>
-    <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="false">192.168.100.194</domain>
-    </domain-config>
+    <base-config cleartextTrafficPermitted="true" />
 </network-security-config>

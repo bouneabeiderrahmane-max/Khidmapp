@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../features/account/presentation/account_page.dart';
@@ -7,6 +8,7 @@ import '../features/catalog/presentation/product_detail_page.dart';
 import '../features/custom_order/presentation/custom_order_detail_page.dart';
 import '../features/custom_order/presentation/custom_order_list_page.dart';
 import '../features/custom_order/presentation/new_custom_order_page.dart';
+import '../features/dev_settings/presentation/dev_settings_page.dart';
 import '../features/home/presentation/home_page.dart';
 import '../features/placeholder/placeholder_page.dart';
 import '../features/shell/home_shell.dart';
@@ -26,6 +28,11 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/',
     routes: [
       GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
+      // Route absente du build release (voir kDebugMode) — jamais dans la
+      // table de routes livrée aux utilisateurs finaux, pas seulement son
+      // point d'entrée (voir AccountPage).
+      if (kDebugMode)
+        GoRoute(path: '/dev-settings', builder: (context, state) => const DevSettingsPage()),
       GoRoute(
         path: '/product/:id',
         builder: (context, state) =>

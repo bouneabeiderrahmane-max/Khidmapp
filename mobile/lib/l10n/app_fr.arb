@@ -104,5 +104,17 @@
     "placeholders": { "id": {} }
   },
   "customOrderRequireLogin": "Connectez-vous pour envoyer une demande de commande personnalisée.",
-  "customOrderNeedAddress": "Ajoutez d'abord une adresse dans votre compte (onglet Compte) pour pouvoir commander."
+  "customOrderNeedAddress": "Ajoutez d'abord une adresse dans votre compte (onglet Compte) pour pouvoir commander.",
+  "accountDevSettings": "Paramètres développeur",
+  "devSettingsTitle": "Paramètres développeur",
+  "devSettingsApiBaseUrl": "URL de base de l'API",
+  "devSettingsHint": "ex. http://192.168.1.100:8000/api/v1",
+  "devSettingsSave": "Enregistrer",
+  "devSettingsReset": "Réinitialiser à la valeur par défaut",
+  "devSettingsSaved": "URL enregistrée et appliquée immédiatement.",
+  "devSettingsInvalidUrl": "Adresse invalide (doit commencer par http:// ou https://)",
+  "devSettingsCurrentlyUsed": "Actuellement utilisée : {url}",
+  "@devSettingsCurrentlyUsed": {
+    "placeholders": { "url": {} }
+  }
 }
