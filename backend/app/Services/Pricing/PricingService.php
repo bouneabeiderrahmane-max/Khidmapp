@@ -87,6 +87,37 @@ class PricingService
         );
     }
 
+    /**
+     * Conversion + marge pour un article hors catalogue ("pedido
+     * personalizado", CDC — extension) : même moteur que subtotalForVariant
+     * (précédence catégorie > boutique > global), mais à partir d'un prix
+     * saisi par le client plutôt que d'une ProductVariant — il n'existe
+     * donc pas de catégorie associée, seule la marge de boutique (si connue)
+     * ou globale s'applique.
+     */
+    public function priceForExternalItem(float $priceEur, ?int $boutiqueId = null): ItemPriceBreakdown
+    {
+        $currencyPair = config('pricing.default_currency_pair');
+        $exchangeRate = $this->currentExchangeRate($currencyPair);
+        $convertedMru = round($priceEur * $exchangeRate, 2);
+
+        [$marginPercent, $marginSource] = $this->resolveMarginPercentForScope(null, $boutiqueId);
+
+        $marginAmountMru = round($convertedMru * $marginPercent / 100, 2);
+        $subtotalMru = round($convertedMru + $marginAmountMru, 2);
+
+        return new ItemPriceBreakdown(
+            basePriceEur: $priceEur,
+            currencyPair: $currencyPair,
+            exchangeRate: $exchangeRate,
+            convertedMru: $convertedMru,
+            marginPercent: $marginPercent,
+            marginSource: $marginSource,
+            marginAmountMru: $marginAmountMru,
+            subtotalMru: $subtotalMru,
+        );
+    }
+
     public function deliveryFeeForAmount(string $zone, float $amount): float
     {
         $tier = DeliveryFeeTier::query()->forAmount($zone, $amount)->orderByDesc('min_price_mru')->first();
@@ -131,15 +162,23 @@ class PricingService
     }
 
     /**
-     * Précédence confirmée : catégorie > boutique > global (docs/PLAN.md §8).
-     *
      * @return array{0: float, 1: string}
      */
     private function resolveMarginPercent(Product $product): array
     {
+        return $this->resolveMarginPercentForScope($product->category_id, $product->boutique_id);
+    }
+
+    /**
+     * Précédence confirmée : catégorie > boutique > global (docs/PLAN.md §8).
+     *
+     * @return array{0: float, 1: string}
+     */
+    private function resolveMarginPercentForScope(?int $categoryId, ?int $boutiqueId): array
+    {
         $scopes = [
-            [MarginScope::CATEGORY, $product->category_id],
-            [MarginScope::BOUTIQUE, $product->boutique_id],
+            [MarginScope::CATEGORY, $categoryId],
+            [MarginScope::BOUTIQUE, $boutiqueId],
             [MarginScope::GLOBAL, null],
         ];
 

@@ -14,6 +14,7 @@ return [
         'order_cancelled' => 'Commande annulée',
         'order_refunded' => 'Commande remboursée',
         'complaint_reply' => 'Nouvelle réponse à votre réclamation',
+        'custom_order_rejected' => 'Demande de produit personnalisé rejetée',
     ],
     'body' => [
         'order_confirmed' => 'Votre commande #:order_id a bien été enregistrée. Total : :total MRU.',
@@ -28,5 +29,6 @@ return [
         'order_cancelled' => 'Votre commande #:order_id a été annulée.',
         'order_refunded' => 'Votre commande #:order_id a été remboursée.',
         'complaint_reply' => 'Le service client a répondu à votre réclamation liée à la commande #:order_id.',
+        'custom_order_rejected' => 'Votre demande de produit personnalisé #:request_id n\'a pas pu être confirmée. Motif : :reason',
     ],
 ];

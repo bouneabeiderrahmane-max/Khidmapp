@@ -403,6 +403,29 @@ Le Sprint 0 avait livré un squelette React (navigation, i18n FR/AR, mise en pag
 
 ---
 
+## 7duodecies ter. Produit personnalisé ("pedido personalizado") — extension hors CDC
+
+Demande explicite après coup, sur le modèle d'une app tierce de type "achat par proxy" (nom non repris, identité visuelle propre à Khidmapp) : permettre au client de faire acheter un produit trouvé lui-même sur le site d'une boutique, plutôt que limité au catalogue synchronisé. Clarifications tranchées avec l'utilisateur avant implémentation :
+- **Frais de service** : le moteur de marge existant (`PricingService`/`margin_rules`, précédence catégorie > boutique > global, §5) est réutilisé tel quel — pas de barème séparé pour ce flux.
+- **Prix estimé saisi par le client** : engageant, utilisé directement par le moteur de marge pour calculer le prix final (pas de re-saisie manuelle par l'administration).
+- **Modélisation de la revue** : entité séparée (`custom_order_requests`/`custom_order_items`), distincte de `orders` — aucune commande n'existe tant que l'administration n'a pas confirmé la faisabilité. Seule l'approbation crée réellement la ligne `orders` (statut initial habituel `paiement_en_attente`), avec un lien traçable (`order_items.custom_order_item_id`, nullable) vers la ligne de demande d'origine (URL produit, notes taille/couleur — absentes du schéma `order_items` standard).
+- **Paiement** : collecté après confirmation/tarification par l'administration, jamais avant — cohérent avec le fait que le prix final dépend de la marge résolue à l'approbation.
+
+**Étapes simplifiées côté client** (`App\Support\CustomOrderStage`) : Révision → Achat → Réception et contrôle qualité à Madrid → Expédition internationale → Livraison à Nouakchott — un mapping d'affichage pur (aucune nouvelle state machine) qui regroupe les 15 statuts détaillés d'`OrderStatus` (§3) une fois la demande convertie en commande ; avant conversion, l'étape est toujours "Révision".
+
+**Backend** : migrations `custom_order_requests`/`custom_order_items` + colonne `order_items.custom_order_item_id` ; modèles `CustomOrderRequest`/`CustomOrderItem` ; `CustomOrderRequestService` (approve/reject) ; endpoints client (`/custom-order-requests`) et admin (`/admin/custom-order-requests`, réutilisant la permission `orders.manage_status` — même principe de supervision que les commandes classiques, §4) ; notification `ORDER_CONFIRMED` réutilisée à l'approbation (devient une vraie commande), nouveau gabarit `CUSTOM_ORDER_REJECTED` au rejet. 10 tests Feature dédiés (soumission, ownership, permissions, calcul de prix avec marge boutique vs. globale, rejet avec motif obligatoire, double revue bloquée).
+
+**Admin React** : nouvelle page "Produits personnalisés" (file d'attente filtrable par statut, détail des articles avec lien produit, confirmation → création de commande / rejet avec motif obligatoire).
+
+**Mobile** : nouvel onglet "Accueil" (premier onglet, remplace l'ancien point d'entrée direct sur Catalogue) — accueil nominatif, recherche de boutique, grille des boutiques actives (`GET /boutiques`, tape → catalogue filtré par boutique via le paramètre `boutique` déjà supporté par `SearchProductsRequest`), bouton "Commande personnalisée" (formulaire multi-produits : lien, quantité, prix affiché, notes), liste + détail de mes demandes avec le traceur des 5 étapes.
+
+**Limites signalées explicitement** :
+- **Bilinguisme incomplet sur les nouveaux écrans mobiles** (Accueil, formulaire, liste/détail de commande personnalisée) : mêmes limites que le reste de l'app mobile (voir `mobile/README.md`) — libellés d'écran traduits via ARB, mais pas de vérification visuelle RTL faute d'émulateur/appareil disponible dans cette session.
+- **Aucune modification/annulation d'une demande "en attente"** côté client une fois soumise — seule l'administration peut la faire évoluer (confirmer/rejeter).
+- **Correspondance boutique par URL non automatisée** : le client choisit optionnellement une boutique dans une liste (pour bénéficier d'une marge boutique plutôt que globale) ; rien ne vérifie que l'URL saisie correspond réellement au domaine de la boutique choisie.
+
+---
+
 ## 8. Points encore ouverts
 
 1. Détail fin des permissions par sous-action au sein de chaque module (la matrice CDC 7.5 est une synthèse ; la granularité complète sera affinée module par module au fil des sprints, avec validation à chaque fois).

@@ -39,4 +39,12 @@ final class NotificationTemplate
      * uniquement (voir config/notifications.php).
      */
     public const COMPLAINT_REPLY = 'complaint_reply';
+
+    /**
+     * Rejet d'un "pedido personalizado" (CDC — extension) après vérification
+     * de faisabilité par l'administration. La confirmation, elle, crée une
+     * Commande réelle et réutilise donc ORDER_CONFIRMED (même notification
+     * que le checkout classique).
+     */
+    public const CUSTOM_ORDER_REJECTED = 'custom_order_rejected';
 }

@@ -18,6 +18,10 @@ class HomeShell extends StatelessWidget {
         onDestinationSelected: (index) => navigationShell.goBranch(index),
         destinations: [
           NavigationDestination(
+            icon: const Icon(Icons.home_outlined),
+            label: l10n.navHome,
+          ),
+          NavigationDestination(
             icon: const Icon(Icons.storefront_outlined),
             label: l10n.navCatalog,
           ),

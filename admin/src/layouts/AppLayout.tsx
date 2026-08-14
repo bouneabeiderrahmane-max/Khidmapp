@@ -51,6 +51,9 @@ export function AppLayout() {
           <NavLink to="/orders" className={navLinkClass}>
             {t('nav.orders')}
           </NavLink>
+          <NavLink to="/custom-orders" className={navLinkClass}>
+            {t('nav.customOrders')}
+          </NavLink>
           <NavLink to="/payments" className={navLinkClass}>
             {t('nav.payments')}
           </NavLink>

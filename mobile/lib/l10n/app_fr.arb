@@ -1,6 +1,7 @@
 {
   "@@locale": "fr",
   "appName": "Khidmapp",
+  "navHome": "Accueil",
   "navCatalog": "Catalogue",
   "navCart": "Panier",
   "navOrders": "Commandes",
@@ -66,5 +67,42 @@
   "complaintCategoryRetard": "Retard",
   "complaintCategoryDommage": "Dommage",
   "complaintCategoryErreurFacturation": "Erreur de facturation",
-  "complaintCategoryAutre": "Autre"
+  "complaintCategoryAutre": "Autre",
+  "homeWelcome": "Bonjour, {name}",
+  "@homeWelcome": {
+    "placeholders": { "name": {} }
+  },
+  "homeWelcomeGuest": "Bonjour",
+  "homeWhatToBuy": "Que voulez-vous acheter aujourd'hui ?",
+  "homeSearchBoutique": "Rechercher une boutique",
+  "homeBoutiquesTitle": "Nos boutiques",
+  "homeBoutiquesEmpty": "Aucune boutique ne correspond à cette recherche",
+  "homeCustomOrderCta": "Commande personnalisée",
+  "homeCustomOrderSubtitle": "Trouvé un produit ailleurs ? Envoyez-nous le lien, nous nous occupons du reste.",
+  "homeMyCustomOrders": "Mes commandes personnalisées",
+  "homeSeeAll": "Voir tout",
+  "customOrderTitle": "Commande personnalisée",
+  "customOrderIntro": "Ajoutez un ou plusieurs produits trouvés sur le site d'une boutique : lien, quantité et prix affiché.",
+  "customOrderBoutique": "Boutique (optionnel)",
+  "customOrderProductUrl": "Lien du produit",
+  "customOrderQuantity": "Quantité",
+  "customOrderEstimatedPrice": "Prix affiché (EUR)",
+  "customOrderNotes": "Notes (taille, couleur…)",
+  "customOrderAddProduct": "Ajouter un autre produit",
+  "customOrderRemoveProduct": "Retirer",
+  "customOrderAddress": "Adresse de livraison",
+  "customOrderPaymentMethod": "Mode de paiement",
+  "customOrderPaymentBankily": "Bankily",
+  "customOrderPaymentManual": "Virement manuel",
+  "customOrderSubmit": "Envoyer la demande",
+  "customOrderSubmitted": "Votre demande a été envoyée. Notre équipe va l'examiner avant l'achat.",
+  "customOrderListEmpty": "Aucune demande de commande personnalisée",
+  "customOrderStages": "Étapes de la commande",
+  "customOrderAdminNote": "Note de l'équipe Khidmapp",
+  "customOrderLinkedOrder": "Commande n°{id}",
+  "@customOrderLinkedOrder": {
+    "placeholders": { "id": {} }
+  },
+  "customOrderRequireLogin": "Connectez-vous pour envoyer une demande de commande personnalisée.",
+  "customOrderNeedAddress": "Ajoutez d'abord une adresse dans votre compte (onglet Compte) pour pouvoir commander."
 }

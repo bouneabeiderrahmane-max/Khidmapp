@@ -4,6 +4,10 @@ import '../features/account/presentation/account_page.dart';
 import '../features/auth/presentation/login_page.dart';
 import '../features/catalog/presentation/catalog_page.dart';
 import '../features/catalog/presentation/product_detail_page.dart';
+import '../features/custom_order/presentation/custom_order_detail_page.dart';
+import '../features/custom_order/presentation/custom_order_list_page.dart';
+import '../features/custom_order/presentation/new_custom_order_page.dart';
+import '../features/home/presentation/home_page.dart';
 import '../features/placeholder/placeholder_page.dart';
 import '../features/shell/home_shell.dart';
 import '../features/support/presentation/complaint_detail_page.dart';
@@ -19,13 +23,26 @@ import '../features/support/presentation/support_page.dart';
 /// écran plutôt que par une redirection globale.
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: '/catalog',
+    initialLocation: '/',
     routes: [
       GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
       GoRoute(
         path: '/product/:id',
         builder: (context, state) =>
             ProductDetailPage(productId: int.parse(state.pathParameters['id']!)),
+      ),
+      GoRoute(
+        path: '/custom-order/new',
+        builder: (context, state) => const NewCustomOrderPage(),
+      ),
+      GoRoute(
+        path: '/custom-order',
+        builder: (context, state) => const CustomOrderListPage(),
+      ),
+      GoRoute(
+        path: '/custom-order/:id',
+        builder: (context, state) =>
+            CustomOrderDetailPage(requestId: int.parse(state.pathParameters['id']!)),
       ),
       GoRoute(
         path: '/support/new-complaint',
@@ -40,6 +57,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state, navigationShell) =>
             HomeShell(navigationShell: navigationShell),
         branches: [
+          StatefulShellBranch(
+            routes: [GoRoute(path: '/', builder: (context, state) => const HomePage())],
+          ),
           StatefulShellBranch(
             routes: [GoRoute(path: '/catalog', builder: (context, state) => const CatalogPage())],
           ),

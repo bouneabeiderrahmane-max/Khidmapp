@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\BoutiqueSyncController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\CategoryMappingController;
 use App\Http\Controllers\Admin\ComplaintController as AdminComplaintController;
+use App\Http\Controllers\Admin\CustomOrderRequestController as AdminCustomOrderRequestController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DeliveryFeeTierController;
 use App\Http\Controllers\Admin\ExchangeRateController;
@@ -99,6 +100,11 @@ Route::middleware(['auth:api', 'can:orders.manage_status'])->prefix('admin')->gr
 
     Route::get('/logistics/dashboard', [LogisticsController::class, 'dashboard']);
     Route::get('/logistics/alerts', [LogisticsController::class, 'alerts']);
+
+    Route::get('/custom-order-requests', [AdminCustomOrderRequestController::class, 'index']);
+    Route::get('/custom-order-requests/{customOrderRequest}', [AdminCustomOrderRequestController::class, 'show']);
+    Route::post('/custom-order-requests/{customOrderRequest}/approve', [AdminCustomOrderRequestController::class, 'approve']);
+    Route::post('/custom-order-requests/{customOrderRequest}/reject', [AdminCustomOrderRequestController::class, 'reject']);
 });
 
 Route::middleware(['auth:api', 'can:orders.create_for_client'])->prefix('admin')->group(function () {

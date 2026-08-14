@@ -3,6 +3,7 @@
 use App\Http\Controllers\Cart\CartController;
 use App\Http\Controllers\Complaint\ComplaintAttachmentController;
 use App\Http\Controllers\Complaint\ComplaintController;
+use App\Http\Controllers\CustomOrderRequestController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\Payment\PaymentController;
 use App\Http\Controllers\Profile\AddressController;
@@ -28,6 +29,10 @@ Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel']);
 
 Route::post('/orders/{order}/payments/bankily/initiate', [PaymentController::class, 'initiateBankily']);
 Route::post('/orders/{order}/payment-proof', [PaymentController::class, 'submitProof']);
+
+Route::get('/custom-order-requests', [CustomOrderRequestController::class, 'index']);
+Route::post('/custom-order-requests', [CustomOrderRequestController::class, 'store']);
+Route::get('/custom-order-requests/{customOrderRequest}', [CustomOrderRequestController::class, 'show']);
 
 Route::get('/notifications', [NotificationController::class, 'index']);
 Route::get('/notification-preferences', [NotificationController::class, 'showPreferences']);

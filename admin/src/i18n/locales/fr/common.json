@@ -6,6 +6,7 @@
     "dashboard": "Tableau de bord",
     "boutiques": "Boutiques",
     "orders": "Commandes",
+    "customOrders": "Produits personnalisés",
     "payments": "Paiements",
     "users": "Utilisateurs",
     "roles": "Rôles et permissions",

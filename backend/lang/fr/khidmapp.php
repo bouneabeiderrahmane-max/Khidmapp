@@ -92,4 +92,17 @@ return [
     ],
     'account_blocked' => 'Votre compte a été bloqué. Contactez le service client pour plus d\'informations.',
     'cannot_assign_internal_roles_to_client' => 'Impossible d\'attribuer un rôle interne à un compte client.',
+    'custom_order_status' => [
+        'en_attente' => 'En attente de validation',
+        'confirmee' => 'Confirmée',
+        'rejetee' => 'Rejetée',
+    ],
+    'custom_order_stage' => [
+        'review' => 'Révision',
+        'purchase' => 'Achat',
+        'madrid_reception_qc' => 'Réception et contrôle qualité à Madrid',
+        'international_shipping' => 'Expédition internationale',
+        'delivery' => 'Livraison à Nouakchott',
+    ],
+    'custom_order_not_pending' => 'Cette demande a déjà été traitée.',
 ];

@@ -32,6 +32,7 @@ flutter run --dart-define=API_BASE_URL=http://<IP_DU_POSTE>:8000/api/v1
 
 ## Ce qui est connecté à l'API réelle
 
+- **Accueil** (`/`, premier onglet) : accueil nominatif, recherche de boutique, grille des boutiques actives (`GET /boutiques`) — tapoter une boutique ouvre le Catalogue filtré dessus. Bouton "Commande personnalisée" vers le formulaire multi-produits (lien produit + quantité + prix affiché + notes par article, `POST /custom-order-requests`), et raccourci vers mes demandes (`GET /custom-order-requests`, détail avec traceur des 5 étapes Révision → Achat → Réception/contrôle qualité Madrid → Expédition internationale → Livraison Nouakchott — voir `docs/PLAN.md` §7duodecies ter). Nécessite une connexion et au moins une adresse enregistrée pour soumettre une demande ; le prix final n'est connu qu'après confirmation par l'équipe Khidmapp (statut "En attente de validation" puis "Confirmée"/"Rejetée").
 - **Authentification** (`/login`) : connexion par OTP téléphone (`POST /auth/otp/request` puis `/auth/otp/verify`), jeton JWT en stockage sécurisé (`flutter_secure_storage`), auto-inscription au premier code vérifié (comportement de l'API).
 - **Catalogue** (`/catalog`) : recherche (`GET /products?q=...`), filtre par catégorie (`GET /categories`), tri (nouveautés/prix). Grille de produits avec prix final en MRU, jamais de prix EUR/URL boutique — l'API ne les expose de toute façon pas au client.
 - **Fiche produit** (`/product/:id`) : `GET /products/{id}`, sélecteur taille/couleur par variante, ajout au panier (`POST /cart/items`) — demande une connexion si l'utilisateur n'est pas authentifié.
@@ -47,6 +48,7 @@ Vérifié uniquement via `flutter analyze`/`flutter test` et une comparaison dir
 - **Compte** : édition du profil (nom/e-mail/téléphone), modification d'une adresse existante (seuls l'ajout et la suppression sont câblés) et désactivation de compte ne sont pas construits.
 - **Réclamations sans pièce jointe** : l'API accepte des images en pièce jointe (`multipart/form-data`) ; l'écran mobile n'envoie que le texte du message pour l'instant.
 - **Aucune image produit affichée** dans les données de démonstration actuelles (le champ `image`/`images` de l'API est `null` tant que la synchronisation catalogue reste un simulateur, voir Sprint 3) — un espace réservé (icône) s'affiche à la place, géré proprement, pas une erreur silencieuse.
+- **Commande personnalisée** : pas de modification/annulation d'une demande "en attente" une fois soumise côté client ; pas de vérification que l'URL saisie correspond réellement à la boutique optionnellement sélectionnée (choisie seulement pour bénéficier d'une marge boutique plutôt que globale).
 
 ## Structure
 

@@ -7,6 +7,7 @@ import { BoutiquesPage } from '../pages/BoutiquesPage'
 import { OrdersPage } from '../pages/OrdersPage'
 import { OrderDetailPage } from '../pages/OrderDetailPage'
 import { PaymentsPage } from '../pages/PaymentsPage'
+import { CustomOrdersPage } from '../pages/CustomOrdersPage'
 import { UsersPage } from '../pages/UsersPage'
 import { RolesPage } from '../pages/RolesPage'
 import { ReportsPage } from '../pages/ReportsPage'
@@ -24,6 +25,7 @@ export const router = createBrowserRouter([
           { path: 'boutiques', element: <BoutiquesPage /> },
           { path: 'orders', element: <OrdersPage /> },
           { path: 'orders/:id', element: <OrderDetailPage /> },
+          { path: 'custom-orders', element: <CustomOrdersPage /> },
           { path: 'payments', element: <PaymentsPage /> },
           { path: 'users', element: <UsersPage /> },
           { path: 'roles', element: <RolesPage /> },

@@ -14,6 +14,7 @@ return [
         'order_cancelled' => 'تم إلغاء الطلب',
         'order_refunded' => 'تم استرداد الطلب',
         'complaint_reply' => 'رد جديد على شكواك',
+        'custom_order_rejected' => 'تم رفض طلب المنتج المخصص',
     ],
     'body' => [
         'order_confirmed' => 'تم تسجيل طلبك رقم #:order_id بنجاح. المجموع: :total أوقية.',

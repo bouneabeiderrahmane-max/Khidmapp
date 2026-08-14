@@ -92,4 +92,17 @@ return [
     ],
     'account_blocked' => 'تم حظر حسابك. يرجى التواصل مع خدمة العملاء لمزيد من المعلومات.',
     'cannot_assign_internal_roles_to_client' => 'لا يمكن إسناد دور داخلي لحساب عميل.',
+    'custom_order_status' => [
+        'en_attente' => 'قيد المراجعة',
+        'confirmee' => 'مؤكدة',
+        'rejetee' => 'مرفوضة',
+    ],
+    'custom_order_stage' => [
+        'review' => 'المراجعة',
+        'purchase' => 'الشراء',
+        'madrid_reception_qc' => 'الاستلام والفحص في مدريد',
+        'international_shipping' => 'الشحن الدولي',
+        'delivery' => 'التسليم في نواكشوط',
+    ],
+    'custom_order_not_pending' => 'تمت معالجة هذا الطلب مسبقاً.',
 ];

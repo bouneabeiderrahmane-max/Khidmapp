@@ -1,6 +1,7 @@
 {
   "@@locale": "ar",
   "appName": "خدمة آب",
+  "navHome": "الرئيسية",
   "navCatalog": "الكتالوج",
   "navCart": "السلة",
   "navOrders": "الطلبات",
@@ -66,5 +67,42 @@
   "complaintCategoryRetard": "تأخير",
   "complaintCategoryDommage": "ضرر",
   "complaintCategoryErreurFacturation": "خطأ في الفوترة",
-  "complaintCategoryAutre": "أخرى"
+  "complaintCategoryAutre": "أخرى",
+  "homeWelcome": "مرحباً، {name}",
+  "@homeWelcome": {
+    "placeholders": { "name": {} }
+  },
+  "homeWelcomeGuest": "مرحباً",
+  "homeWhatToBuy": "ماذا تريد أن تشتري اليوم؟",
+  "homeSearchBoutique": "ابحث عن متجر",
+  "homeBoutiquesTitle": "متاجرنا",
+  "homeBoutiquesEmpty": "لا يوجد متجر يطابق هذا البحث",
+  "homeCustomOrderCta": "طلب مخصص",
+  "homeCustomOrderSubtitle": "وجدت منتجاً في مكان آخر؟ أرسل لنا الرابط ونحن نتكفل بالباقي.",
+  "homeMyCustomOrders": "طلباتي المخصصة",
+  "homeSeeAll": "عرض الكل",
+  "customOrderTitle": "طلب مخصص",
+  "customOrderIntro": "أضف منتجاً واحداً أو أكثر وجدته في موقع أحد المتاجر: الرابط، الكمية، والسعر المعروض.",
+  "customOrderBoutique": "المتجر (اختياري)",
+  "customOrderProductUrl": "رابط المنتج",
+  "customOrderQuantity": "الكمية",
+  "customOrderEstimatedPrice": "السعر المعروض (يورو)",
+  "customOrderNotes": "ملاحظات (المقاس، اللون…)",
+  "customOrderAddProduct": "إضافة منتج آخر",
+  "customOrderRemoveProduct": "إزالة",
+  "customOrderAddress": "عنوان التسليم",
+  "customOrderPaymentMethod": "طريقة الدفع",
+  "customOrderPaymentBankily": "بنكيلي",
+  "customOrderPaymentManual": "تحويل يدوي",
+  "customOrderSubmit": "إرسال الطلب",
+  "customOrderSubmitted": "تم إرسال طلبك. سيقوم فريقنا بمراجعته قبل الشراء.",
+  "customOrderListEmpty": "لا توجد طلبات مخصصة",
+  "customOrderStages": "مراحل الطلب",
+  "customOrderAdminNote": "ملاحظة فريق خدمة آب",
+  "customOrderLinkedOrder": "الطلب رقم {id}",
+  "@customOrderLinkedOrder": {
+    "placeholders": { "id": {} }
+  },
+  "customOrderRequireLogin": "سجّل الدخول لإرسال طلب منتج مخصص.",
+  "customOrderNeedAddress": "أضف عنواناً أولاً من حسابك (تبويب الحساب) لتتمكن من الطلب."
 }

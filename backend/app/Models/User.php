@@ -83,6 +83,11 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(Complaint::class);
     }
 
+    public function customOrderRequests(): HasMany
+    {
+        return $this->hasMany(CustomOrderRequest::class);
+    }
+
     public function blockedBy(): BelongsTo
     {
         return $this->belongsTo(self::class, 'blocked_by');

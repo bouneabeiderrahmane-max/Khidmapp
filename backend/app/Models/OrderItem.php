@@ -36,6 +36,11 @@ class OrderItem extends Model
         return $this->belongsTo(Boutique::class);
     }
 
+    public function customOrderItem(): BelongsTo
+    {
+        return $this->belongsTo(CustomOrderItem::class);
+    }
+
     public function qualityControlReports(): HasMany
     {
         return $this->hasMany(QualityControlReport::class)->orderBy('created_at');
