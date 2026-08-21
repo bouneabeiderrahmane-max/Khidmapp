@@ -91,6 +91,7 @@ class CartController extends Controller
                 'subtotal_mru' => $totals->subtotalMru,
                 'delivery_zone' => $totals->deliveryZone,
                 'delivery_fee_mru' => $totals->deliveryFeeMru,
+                'management_fee_mru' => $totals->managementFeeMru,
                 'total_mru' => $totals->totalMru,
             ],
         ]);

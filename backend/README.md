@@ -68,11 +68,20 @@ Générée automatiquement depuis le code (`dedoc/scramble`) :
 ## Moteur de calcul de prix (Sprint 4)
 
 - `GET/POST /api/v1/admin/exchange-rates` — historique des taux (ajout uniquement, jamais de modification rétroactive)
-- `GET/POST /api/v1/admin/margin-rules` — règles de marge (global/boutique/catégorie), précédence catégorie > boutique > global
+- `GET/POST /api/v1/admin/margin-rules` — règles de marge explicites (boutique/catégorie, et optionnellement global pour une campagne ponctuelle), précédence catégorie > boutique > global > **palier de prix** (voir ci-dessous)
 - `GET/POST/PUT/DELETE /api/v1/admin/delivery-fee-tiers` — grille de frais de livraison par tranche de prix et par zone
 - `GET /api/v1/admin/products/{id}/price-preview?variant_id=X&zone=Y` — aperçu du prix final calculé (permission `pricing.manage_margin`)
 
 Le cas chiffré du CDC (8.3.1 : 29,95 € → 2 057,16 MRU) est vérifié au centime près dans `PricingServiceTest`.
+
+### Marge par palier de prix + coût de gestion visible (extension, révision du moteur de tarification)
+
+Demande explicite après coup, sur le modèle d'une app tierce de type "achat par proxy" : le client ne doit jamais voir de pourcentage de marge ni de prix EUR, mais l'app doit lui montrer une ligne "Coût de gestion" en plus du sous-total et de la livraison, sur son panier/sa commande.
+
+- **Marge (invisible au client)** : `App\Support\PriceMarginTier::percentFor()` fixe désormais le défaut par tranche de prix EUR affiché (< 200 € : 20 %, 200–700 € : 15 %, > 700 € : 10 %), remplaçant l'ancien défaut plat (`config('pricing.default_margin_percent')`). Une règle `margin_rules` de catégorie ou de boutique reste prioritaire, comme avant ; une règle `global` explicite (créée par un administrateur, ex. campagne ponctuelle) prévaut elle aussi sur le palier, mais n'est plus seedée automatiquement (voir `PricingSeeder` et la migration `remove_auto_seeded_global_margin_rules`, qui retire la règle globale plate seedée par défaut sur les installations existantes pour que les paliers s'appliquent réellement).
+- **Coût de gestion (visible au client)** : 5 % (`config('pricing.management_fee_percent')`) calculé sur (sous-total article + frais de livraison), ajouté au total — `CartTotals::managementFeeMru`, colonne `orders.management_fee_mru`, exposé par `OrderResource`/`GET /api/v1/cart` sous `management_fee_mru`.
+
+**Limite signalée explicitement** : les tranches de livraison restent par prix (§ Sprint 4), pas par poids — une grille par poids réelle a été demandée mais les valeurs MRU n'ont pas encore été fournies ; non implémentée tant qu'elles ne le sont pas. Le champ code promo évoqué dans la même demande n'a pas non plus été tranché (réponse utilisateur non exploitable) — aucun champ promo n'existe côté backend.
 
 ## Catalogue & recherche (Sprint 5)
 

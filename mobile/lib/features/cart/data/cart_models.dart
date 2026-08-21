@@ -52,6 +52,7 @@ class CartSummary {
     required this.subtotalMru,
     this.deliveryZone,
     required this.deliveryFeeMru,
+    required this.managementFeeMru,
     required this.totalMru,
   });
 
@@ -60,6 +61,7 @@ class CartSummary {
     subtotalMru: num.parse(json['subtotal_mru'].toString()).toDouble(),
     deliveryZone: json['delivery_zone'] as String?,
     deliveryFeeMru: num.parse(json['delivery_fee_mru'].toString()).toDouble(),
+    managementFeeMru: num.parse(json['management_fee_mru'].toString()).toDouble(),
     totalMru: num.parse(json['total_mru'].toString()).toDouble(),
   );
 
@@ -67,6 +69,7 @@ class CartSummary {
   final double subtotalMru;
   final String? deliveryZone;
   final double deliveryFeeMru;
+  final double managementFeeMru;
   final double totalMru;
 
   bool get isEmpty => items.isEmpty;

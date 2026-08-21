@@ -126,6 +126,7 @@
   "cartRemove": "Retirer",
   "cartSubtotal": "Sous-total",
   "cartDeliveryFee": "Frais de livraison",
+  "cartManagementFee": "Coût de gestion",
   "cartTotal": "Total",
   "cartCheckout": "Passer la commande",
   "checkoutTitle": "Confirmer la commande",

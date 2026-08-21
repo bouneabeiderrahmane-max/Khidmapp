@@ -119,6 +119,7 @@ class OrderDetail {
     this.paymentMethod,
     required this.subtotalMru,
     required this.deliveryFeeMru,
+    required this.managementFeeMru,
     this.deliveryZone,
     required this.totalMru,
     this.cancellationReason,
@@ -137,6 +138,7 @@ class OrderDetail {
     paymentMethod: json['payment_method'] as String?,
     subtotalMru: num.parse(json['subtotal_mru'].toString()).toDouble(),
     deliveryFeeMru: num.parse(json['delivery_fee_mru'].toString()).toDouble(),
+    managementFeeMru: num.parse(json['management_fee_mru'].toString()).toDouble(),
     deliveryZone: json['delivery_zone'] as String?,
     totalMru: num.parse(json['total_mru'].toString()).toDouble(),
     cancellationReason: json['cancellation_reason'] as String?,
@@ -156,6 +158,7 @@ class OrderDetail {
   final String? paymentMethod;
   final double subtotalMru;
   final double deliveryFeeMru;
+  final double managementFeeMru;
   final String? deliveryZone;
   final double totalMru;
   final String? cancellationReason;

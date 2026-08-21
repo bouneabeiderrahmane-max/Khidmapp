@@ -16,10 +16,18 @@ final class MarginScope
     public const CATEGORY = 'category';
 
     /**
+     * Source de marge quand ni catégorie, ni boutique, ni règle globale
+     * explicite ne couvre le produit : paliers automatiques par prix EUR
+     * (voir PriceMarginTier), invisibles au client au même titre que les
+     * autres sources.
+     */
+    public const PRICE_TIER = 'price_tier';
+
+    /**
      * Ordre de précédence, du plus spécifique au moins spécifique.
      */
     public static function precedence(): array
     {
-        return [self::CATEGORY, self::BOUTIQUE, self::GLOBAL];
+        return [self::CATEGORY, self::BOUTIQUE, self::GLOBAL, self::PRICE_TIER];
     }
 }

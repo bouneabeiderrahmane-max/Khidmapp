@@ -83,7 +83,9 @@ class OrderControllerTest extends TestCase
             ->assertJsonPath('data.status', OrderStatus::AWAITING_PAYMENT)
             ->assertJsonPath('data.subtotal_mru', '1000.00')
             ->assertJsonPath('data.delivery_fee_mru', '200.00')
-            ->assertJsonPath('data.total_mru', '1200.00')
+            // Coût de gestion 5% sur (sous-total + livraison) : (1000+200)*5% = 60.
+            ->assertJsonPath('data.management_fee_mru', '60.00')
+            ->assertJsonPath('data.total_mru', '1260.00')
             ->assertJsonPath('data.is_manual_order', false)
             ->assertJsonCount(1, 'data.items');
 

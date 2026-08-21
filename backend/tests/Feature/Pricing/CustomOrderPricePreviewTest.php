@@ -42,6 +42,18 @@ class CustomOrderPricePreviewTest extends TestCase
             ->assertJsonPath('data.subtotal_mru', 712.5);
     }
 
+    public function test_it_falls_back_to_the_price_tier_when_no_margin_rule_covers_the_boutique(): void
+    {
+        MarginRule::query()->delete();
+
+        // 900 EUR * 47.5 = 42750 MRU, palier >700€ => 10 %, +10% = 47025 MRU.
+        $this->getJson('/api/v1/custom-order-price-preview?price_eur=900')
+            ->assertOk()
+            ->assertJsonPath('data.margin_source', 'price_tier')
+            ->assertJsonPath('data.margin_percent', 10)
+            ->assertJsonPath('data.subtotal_mru', 47025);
+    }
+
     public function test_it_requires_a_positive_price(): void
     {
         $this->getJson('/api/v1/custom-order-price-preview?price_eur=0')

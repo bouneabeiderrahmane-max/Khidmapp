@@ -48,7 +48,10 @@ class CustomOrderPricingCalculator
         }
 
         $deliveryFeeMru = $items->isNotEmpty() ? $this->pricing->deliveryFeeForAmount($zone, $subtotalMru) : 0.0;
-        $totalMru = round($subtotalMru + $deliveryFeeMru, 2);
+        $managementFeeMru = $items->isNotEmpty()
+            ? round(($subtotalMru + $deliveryFeeMru) * config('pricing.management_fee_percent') / 100, 2)
+            : 0.0;
+        $totalMru = round($subtotalMru + $deliveryFeeMru + $managementFeeMru, 2);
 
         return new CartTotals(
             lines: $lines,
@@ -58,6 +61,7 @@ class CustomOrderPricingCalculator
             subtotalMru: round($subtotalMru, 2),
             deliveryZone: $zone,
             deliveryFeeMru: $deliveryFeeMru,
+            managementFeeMru: $managementFeeMru,
             totalMru: $totalMru,
         );
     }

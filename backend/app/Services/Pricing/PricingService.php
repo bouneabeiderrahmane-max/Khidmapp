@@ -12,6 +12,7 @@ use App\Models\MarginRule;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Support\MarginScope;
+use App\Support\PriceMarginTier;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
 
@@ -70,7 +71,7 @@ class PricingService
         $exchangeRate = $this->currentExchangeRate($currencyPair);
         $convertedMru = round($basePriceEur * $exchangeRate, 2);
 
-        [$marginPercent, $marginSource] = $this->resolveMarginPercent($variant->product);
+        [$marginPercent, $marginSource] = $this->resolveMarginPercent($variant->product, $basePriceEur);
 
         $marginAmountMru = round($convertedMru * $marginPercent / 100, 2);
         $subtotalMru = round($convertedMru + $marginAmountMru, 2);
@@ -101,7 +102,7 @@ class PricingService
         $exchangeRate = $this->currentExchangeRate($currencyPair);
         $convertedMru = round($priceEur * $exchangeRate, 2);
 
-        [$marginPercent, $marginSource] = $this->resolveMarginPercentForScope(null, $boutiqueId);
+        [$marginPercent, $marginSource] = $this->resolveMarginPercentForScope(null, $boutiqueId, $priceEur);
 
         $marginAmountMru = round($convertedMru * $marginPercent / 100, 2);
         $subtotalMru = round($convertedMru + $marginAmountMru, 2);
@@ -164,17 +165,22 @@ class PricingService
     /**
      * @return array{0: float, 1: string}
      */
-    private function resolveMarginPercent(Product $product): array
+    private function resolveMarginPercent(Product $product, float $priceEur): array
     {
-        return $this->resolveMarginPercentForScope($product->category_id, $product->boutique_id);
+        return $this->resolveMarginPercentForScope($product->category_id, $product->boutique_id, $priceEur);
     }
 
     /**
-     * Précédence confirmée : catégorie > boutique > global (docs/PLAN.md §8).
+     * Précédence confirmée : catégorie > boutique > règle globale explicite
+     * > paliers automatiques par prix (docs/PLAN.md §8, révisée). Une règle
+     * "global" en base reste un levier admin explicite (ex. campagne
+     * ponctuelle) qui prévaut sur les paliers ; en son absence — le cas
+     * courant depuis le retrait du seed automatique — PriceMarginTier fixe
+     * la marge selon la tranche de prix EUR, invisible au client.
      *
      * @return array{0: float, 1: string}
      */
-    private function resolveMarginPercentForScope(?int $categoryId, ?int $boutiqueId): array
+    private function resolveMarginPercentForScope(?int $categoryId, ?int $boutiqueId, float $priceEur): array
     {
         $scopes = [
             [MarginScope::CATEGORY, $categoryId],
@@ -194,8 +200,6 @@ class PricingService
             }
         }
 
-        // Aucune règle "global" en base (ne devrait pas arriver en pratique,
-        // PricingSeeder en crée une) : repli sur la config applicative.
-        return [(float) config('pricing.default_margin_percent'), MarginScope::GLOBAL];
+        return [PriceMarginTier::percentFor($priceEur), MarginScope::PRICE_TIER];
     }
 }

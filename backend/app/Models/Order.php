@@ -20,6 +20,7 @@ class Order extends Model
             'exchange_rate_snapshot' => 'decimal:6',
             'subtotal_mru' => 'decimal:2',
             'delivery_fee_snapshot_mru' => 'decimal:2',
+            'management_fee_mru' => 'decimal:2',
             'total_mru' => 'decimal:2',
             'cancellation_fee_applicable' => 'boolean',
             'cancelled_at' => 'datetime',

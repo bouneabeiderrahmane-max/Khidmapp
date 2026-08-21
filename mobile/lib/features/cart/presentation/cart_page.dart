@@ -163,6 +163,7 @@ class _CartSummaryFooter extends StatelessWidget {
           children: [
             _SummaryRow(label: l10n.cartSubtotal, value: cart.subtotalMru),
             _SummaryRow(label: l10n.cartDeliveryFee, value: cart.deliveryFeeMru),
+            _SummaryRow(label: l10n.cartManagementFee, value: cart.managementFeeMru),
             const Divider(),
             _SummaryRow(label: l10n.cartTotal, value: cart.totalMru, emphasize: true),
             const SizedBox(height: 12),

@@ -58,7 +58,9 @@ class CartControllerTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.subtotal_mru', 1000)
             ->assertJsonPath('data.delivery_fee_mru', 200)
-            ->assertJsonPath('data.total_mru', 1200);
+            // Coût de gestion 5% sur (sous-total + livraison) : (1000+200)*5% = 60.
+            ->assertJsonPath('data.management_fee_mru', 60)
+            ->assertJsonPath('data.total_mru', 1260);
     }
 
     public function test_adding_the_same_variant_twice_increments_the_quantity_instead_of_duplicating(): void

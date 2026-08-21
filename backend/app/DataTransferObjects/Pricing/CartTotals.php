@@ -22,6 +22,7 @@ readonly class CartTotals
         public float $subtotalMru,
         public string $deliveryZone,
         public float $deliveryFeeMru,
+        public float $managementFeeMru,
         public float $totalMru,
     ) {}
 }

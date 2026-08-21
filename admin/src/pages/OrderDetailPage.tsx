@@ -40,6 +40,7 @@ type OrderDetail = {
   payment_method: string | null
   subtotal_mru: string | number
   delivery_fee_mru: string | number
+  management_fee_mru: string | number
   delivery_zone: string | null
   total_mru: string | number
   cancellation_reason: string | null
@@ -117,6 +118,8 @@ export function OrderDetailPage() {
             <dd className="tabular-nums">{data.subtotal_mru} MRU</dd>
             <dt className="text-gray-500">Livraison</dt>
             <dd className="tabular-nums">{data.delivery_fee_mru} MRU</dd>
+            <dt className="text-gray-500">Coût de gestion</dt>
+            <dd className="tabular-nums">{data.management_fee_mru} MRU</dd>
             <dt className="text-gray-500 font-medium">Total</dt>
             <dd className="tabular-nums font-medium">{data.total_mru} MRU</dd>
             <dt className="text-gray-500">Mode de paiement</dt>

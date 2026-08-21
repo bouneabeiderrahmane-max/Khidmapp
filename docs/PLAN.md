@@ -426,6 +426,19 @@ Demande explicite après coup, sur le modèle d'une app tierce de type "achat pa
 
 ---
 
+## 7duodecies quater. Marge par palier de prix + coût de gestion visible — révision du moteur de tarification (extension hors CDC)
+
+Demande explicite après coup, sur le modèle d'une app tierce de type "achat par proxy" (captures d'écran fournies) : le client ne doit jamais voir de pourcentage de marge ni de prix EUR (règle transverse déjà en vigueur), mais l'app doit désormais lui montrer une ligne "Coût de gestion" distincte, en plus du sous-total et de la livraison. Clarifications tranchées avec l'utilisateur avant implémentation :
+- **Marge (toujours invisible au client)** : par palier de prix EUR affiché — sous 200 € : 20 %, de 200 à 700 € : 15 %, au-delà de 700 € : 10 % (`App\Support\PriceMarginTier`). Remplace, comme dernier maillon de la précédence, l'ancien défaut plat (`config('pricing.default_margin_percent')`) évoqué au §7quinquies — **révise donc la précédence confirmée à cette époque** : catégorie > boutique > global (règle explicite, désormais réservée à une campagne ponctuelle décidée par un administrateur, plus seedée par défaut) > palier de prix. Une migration (`remove_auto_seeded_global_margin_rules`) retire la règle globale plate que `PricingSeeder` créait automatiquement, pour que les paliers s'appliquent réellement sur les installations existantes.
+- **Coût de gestion (visible au client)** : 5 % (`config('pricing.management_fee_percent')`), calculé sur (sous-total article + frais de livraison) — vérifié au centime près contre l'exemple chiffré fourni par l'utilisateur (21,90 € + 9,95 € de livraison, ×5 % = 1,59). Appliqué uniformément au catalogue, au panier et à la commande personnalisée (même moteur, `CartTotals::managementFeeMru` dans les deux calculateurs de prix) ; nouvelle colonne `orders.management_fee_mru`, exposée par `OrderResource` et `GET /api/v1/cart`.
+
+**Limites signalées explicitement, non implémentées dans cette révision** :
+- **Grille de livraison par poids** (Petit/Moyen/Très grand paquet, sur le modèle des captures d'écran) : demandée mais valeurs MRU réelles non fournies — la grille reste par tranche de prix (§7quinquies, point 5 des sujets ouverts) tant que ces chiffres ne sont pas communiqués.
+- **Champ code promo** : évoqué dans la même demande, réponse utilisateur non exploitable ("Something else" sans texte de suivi) — aucun champ, table ni logique de code promo n'existe côté backend (voir aussi le point 15 des sujets ouverts, promotions CDC 8.9.5, plus large et déjà non traité).
+- **Refonte visuelle du checkout façon étapes numérotées** (Adresse → Mode de livraison → Paiement) évoquée dans la demande initiale : non construite dans cette révision, qui s'est concentrée sur le moteur de calcul (marge + coût de gestion) et l'affichage de la nouvelle ligne dans les écrans de totaux existants (panier, détail de commande mobile, détail de commande admin).
+
+---
+
 ## 8. Points encore ouverts
 
 1. Détail fin des permissions par sous-action au sein de chaque module (la matrice CDC 7.5 est une synthèse ; la granularité complète sera affinée module par module au fil des sprints, avec validation à chaque fois).

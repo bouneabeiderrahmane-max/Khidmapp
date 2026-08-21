@@ -60,7 +60,9 @@ class CartPricingCalculatorTest extends TestCase
 
         $this->assertSame(1400.0, $totals->subtotalMru);
         $this->assertSame(200.0, $totals->deliveryFeeMru);
-        $this->assertSame(1600.0, $totals->totalMru);
+        // Coût de gestion 5% sur (sous-total + livraison) : (1400+200)*5% = 80.
+        $this->assertSame(80.0, $totals->managementFeeMru);
+        $this->assertSame(1680.0, $totals->totalMru);
     }
 
     public function test_a_consolidated_subtotal_can_cross_into_a_higher_tier(): void

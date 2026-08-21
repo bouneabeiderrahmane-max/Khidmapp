@@ -72,7 +72,8 @@ class AdminCustomOrderRequestControllerTest extends TestCase
 
     public function test_approving_a_request_creates_an_order_with_the_margin_engine_applied(): void
     {
-        // 30 EUR * 10 (taux) = 300 MRU, +20% de marge = 360 MRU/unité, x2 = 720 MRU sous-total, + 200 MRU livraison = 920 MRU.
+        // 30 EUR * 10 (taux) = 300 MRU, +20% de marge = 360 MRU/unité, x2 = 720 MRU sous-total,
+        // + 200 MRU livraison = 920, + coût de gestion 5% sur (720+200)=46 => 966 MRU.
         $request = $this->pendingRequest(estimatedPriceEur: 30, quantity: 2);
 
         $response = $this->actingAs($this->admin, 'api')
@@ -83,7 +84,8 @@ class AdminCustomOrderRequestControllerTest extends TestCase
             ->assertJsonPath('data.status', CustomOrderRequestStatus::APPROVED)
             ->assertJsonPath('data.order.status', OrderStatus::AWAITING_PAYMENT)
             ->assertJsonPath('data.order.subtotal_mru', '720.00')
-            ->assertJsonPath('data.order.total_mru', '920.00');
+            ->assertJsonPath('data.order.management_fee_mru', '46.00')
+            ->assertJsonPath('data.order.total_mru', '966.00');
 
         $this->assertDatabaseCount('orders', 1);
         $order = Order::query()->first();
@@ -99,14 +101,16 @@ class AdminCustomOrderRequestControllerTest extends TestCase
         $boutique = Boutique::factory()->create(['default_margin_percent' => 0]);
         MarginRule::query()->create(['scope_type' => 'boutique', 'scope_id' => $boutique->id, 'percent' => 50, 'effective_at' => now()->subDay()]);
 
-        // 10 EUR * 10 = 100 MRU, +50% boutique = 150 MRU, x1 = 150, + 200 livraison = 350.
+        // 10 EUR * 10 = 100 MRU, +50% boutique = 150 MRU, x1 = 150, + 200 livraison = 350,
+        // + coût de gestion 5% sur (150+200)=17.5 => 367.5.
         $request = $this->pendingRequest(estimatedPriceEur: 10, quantity: 1, boutiqueId: $boutique->id);
 
         $this->actingAs($this->admin, 'api')
             ->postJson("/api/v1/admin/custom-order-requests/{$request->id}/approve")
             ->assertOk()
             ->assertJsonPath('data.order.subtotal_mru', '150.00')
-            ->assertJsonPath('data.order.total_mru', '350.00');
+            ->assertJsonPath('data.order.management_fee_mru', '17.50')
+            ->assertJsonPath('data.order.total_mru', '367.50');
     }
 
     public function test_rejecting_a_request_requires_a_reason_and_creates_no_order(): void

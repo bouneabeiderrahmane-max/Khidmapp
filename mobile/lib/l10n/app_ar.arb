@@ -126,6 +126,7 @@
   "cartRemove": "إزالة",
   "cartSubtotal": "المجموع الفرعي",
   "cartDeliveryFee": "رسوم التوصيل",
+  "cartManagementFee": "تكلفة التسيير",
   "cartTotal": "المجموع",
   "cartCheckout": "إتمام الطلب",
   "checkoutTitle": "تأكيد الطلب",

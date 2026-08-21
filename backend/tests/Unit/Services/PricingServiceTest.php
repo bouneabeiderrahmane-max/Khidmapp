@@ -79,6 +79,48 @@ class PricingServiceTest extends TestCase
         $this->assertSame(10.0, $breakdown->marginPercent);
     }
 
+    /**
+     * Sans aucune règle en base (catégorie, boutique ou global explicite),
+     * la marge par défaut suit désormais les paliers de prix EUR
+     * (PriceMarginTier) plutôt qu'une valeur plate — voir
+     * PricingSeeder (qui ne crée plus de règle "global" automatiquement)
+     * et la migration remove_auto_seeded_global_margin_rules.
+     */
+    public function test_the_price_tier_is_used_when_no_margin_rule_covers_the_product(): void
+    {
+        ExchangeRate::query()->create(['currency_pair' => 'EUR_MRU', 'rate' => 10, 'effective_at' => now()->subDay()]);
+        DeliveryFeeTier::query()->create(['zone' => 'nouakchott', 'min_price_mru' => 0, 'max_price_mru' => null, 'fee_mru' => 0]);
+
+        $cheap = $this->service->priceForVariant($this->variantWithPrice(150));
+        $mid = $this->service->priceForVariant($this->variantWithPrice(500));
+        $expensive = $this->service->priceForVariant($this->variantWithPrice(900));
+
+        $this->assertSame('price_tier', $cheap->marginSource);
+        $this->assertSame(20.0, $cheap->marginPercent);
+
+        $this->assertSame('price_tier', $mid->marginSource);
+        $this->assertSame(15.0, $mid->marginPercent);
+
+        $this->assertSame('price_tier', $expensive->marginSource);
+        $this->assertSame(10.0, $expensive->marginPercent);
+    }
+
+    /**
+     * Une règle "global" explicite (créée par un administrateur, ex.
+     * campagne ponctuelle) reste prioritaire sur les paliers automatiques.
+     */
+    public function test_an_explicit_global_margin_rule_still_prevails_over_the_price_tier(): void
+    {
+        ExchangeRate::query()->create(['currency_pair' => 'EUR_MRU', 'rate' => 10, 'effective_at' => now()->subDay()]);
+        DeliveryFeeTier::query()->create(['zone' => 'nouakchott', 'min_price_mru' => 0, 'max_price_mru' => null, 'fee_mru' => 0]);
+        MarginRule::query()->create(['scope_type' => 'global', 'scope_id' => null, 'percent' => 5, 'effective_at' => now()->subDay()]);
+
+        $breakdown = $this->service->priceForVariant($this->variantWithPrice(150));
+
+        $this->assertSame('global', $breakdown->marginSource);
+        $this->assertSame(5.0, $breakdown->marginPercent);
+    }
+
     public function test_a_boutique_margin_prevails_over_the_global_default_when_no_category_is_set(): void
     {
         ExchangeRate::query()->create(['currency_pair' => 'EUR_MRU', 'rate' => 10, 'effective_at' => now()->subDay()]);

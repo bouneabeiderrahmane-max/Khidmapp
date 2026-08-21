@@ -59,6 +59,7 @@ class CustomOrderRequestService
                 'exchange_rate_snapshot' => $totals->exchangeRate,
                 'subtotal_mru' => $totals->subtotalMru,
                 'delivery_fee_snapshot_mru' => $totals->deliveryFeeMru,
+                'management_fee_mru' => $totals->managementFeeMru,
                 'delivery_zone' => $totals->deliveryZone,
                 'total_mru' => $totals->totalMru,
             ]);
