@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../auth/application/auth_controller.dart';
@@ -24,23 +23,16 @@ class _HomePageState extends ConsumerState<HomePage> {
     super.dispose();
   }
 
-  /// Ouvre le vrai site de la boutique (navigateur externe) : Khidmapp ne
-  /// synchronise pas réellement son catalogue (voir StubCatalogFetcher),
-  /// le client va donc directement voir/parcourir les produits sur le
-  /// site d'origine. Les prix y restent en EUR — la conversion en MRU
-  /// (marge incluse) reste ce que Khidmapp peut effectivement garantir,
-  /// dans les écrans qu'il contrôle (voir l'aperçu dans le formulaire de
-  /// "Commande personnalisée").
-  Future<void> _openBoutique(BoutiqueSummary boutique) async {
-    final uri = Uri.tryParse(boutique.baseUrl);
-    final l10n = AppLocalizations.of(context);
-    final messenger = ScaffoldMessenger.of(context);
-
-    final launched = uri != null && await launchUrl(uri, mode: LaunchMode.externalApplication);
-
-    if (!launched && mounted) {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.homeCannotOpenBoutique)));
-    }
+  /// Ouvre le vrai site de la boutique dans un navigateur intégré à
+  /// l'application (BoutiqueWebViewPage), sans en faire sortir le client :
+  /// Khidmapp ne synchronise pas réellement son catalogue (voir
+  /// StubCatalogFetcher), le client va donc directement voir/parcourir les
+  /// produits sur le site d'origine. Les prix y restent en EUR — la
+  /// conversion en MRU (marge incluse) reste ce que Khidmapp peut
+  /// effectivement garantir, dans les écrans qu'il contrôle (voir l'aperçu
+  /// dans le formulaire de "Commande personnalisée").
+  void _openBoutique(BoutiqueSummary boutique) {
+    context.push('/boutique-browser', extra: boutique);
   }
 
   @override

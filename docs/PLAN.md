@@ -447,6 +447,14 @@ Suite directe du point ci-dessus : l'utilisateur a fourni les tarifs réels par 
 
 **Implémentation** : `App\Support\PackageWeightTier` (paliers + surcharge kg supplémentaire) ; `PricingService::deliveryFee()` — nouveau point d'entrée qui préfère le poids choisi sur Nouakchott, retombe sur `deliveryFeeForAmount()` sinon (aperçu panier avant l'étape de paiement, autres zones) ; `weight_tier`/`extra_weight_kg` ajoutés aux deux calculateurs de prix, à `orders` et `custom_order_requests` (reporté sur la Commande réelle à l'approbation), requis à la soumission (`POST /orders`, `POST /admin/orders`, `POST /custom-order-requests`). Mobile : sélecteur à 3 cartes (`WeightTierSelector`, clés et tarifs codés en dur en miroir du backend — même principe que les modes de paiement déjà codés en dur des deux côtés) sur l'écran de paiement du panier et sur le formulaire de commande personnalisée, avec champ de poids supplémentaire optionnel révélé pour le plus grand palier ; affiché ensuite dans le détail de commande (mobile et admin).
 
+**Checkout mobile refait en 3 étapes numérotées** (`Stepper`, Adresse → Mode de livraison → Paiement, sur le modèle des captures fournies) dans la foulée : l'étape "Paiement" affiche un récapitulatif de coûts (sous-total/livraison/coût de gestion/total) recalculé côté client selon le palier de poids choisi, sans dupliquer le pourcentage de coût de gestion en dur — déduit du panier via `GET /cart` (voir le docblock de `_CheckoutStepper`).
+
+---
+
+## 7duodecies sexies. Navigateur intégré à l'app pour les boutiques (révision)
+
+Retour du client sur le choix du §7duodecies ter (site réel de la boutique ouvert dans le navigateur externe du téléphone) : "dans les autres apps, tout reste dans l'app" — le client ne veut pas être sorti de Khidmapp, même vers son propre navigateur. Tranché : le site reste ouvert **dans un navigateur intégré à l'application** (`BoutiqueWebViewPage`, `webview_flutter`) plutôt que dans le navigateur externe — le raisonnement de fond ne change pas (toujours le vrai site du tiers, toujours impossible/trompeur d'y réécrire un prix MRU par-dessus), seul le conteneur change. Un bouton flottant "Commande personnalisée" reste accessible sur cet écran pour que le client puisse y revenir facilement une fois le produit trouvé. `url_launcher` (devenu inutilisé) et l'entrée `<queries>` associée dans `AndroidManifest.xml` ont été retirés ; au passage, la permission `INTERNET` — absente du manifest principal, présente seulement en debug/profile par défaut Flutter — a été ajoutée explicitement, sans quoi un build release n'aurait pu faire aucun appel réseau.
+
 ---
 
 ## 8. Points encore ouverts

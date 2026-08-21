@@ -11,6 +11,8 @@ import '../features/custom_order/presentation/custom_order_detail_page.dart';
 import '../features/custom_order/presentation/custom_order_list_page.dart';
 import '../features/custom_order/presentation/new_custom_order_page.dart';
 import '../features/dev_settings/presentation/dev_settings_page.dart';
+import '../features/home/data/home_repository.dart';
+import '../features/home/presentation/boutique_webview_page.dart';
 import '../features/home/presentation/home_page.dart';
 import '../features/orders/presentation/order_detail_page.dart';
 import '../features/orders/presentation/orders_list_page.dart';
@@ -40,6 +42,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/product/:id',
         builder: (context, state) =>
             ProductDetailPage(productId: int.parse(state.pathParameters['id']!)),
+      ),
+      GoRoute(
+        path: '/boutique-browser',
+        builder: (context, state) => BoutiqueWebViewPage(boutique: state.extra! as BoutiqueSummary),
       ),
       GoRoute(
         path: '/custom-order/new',

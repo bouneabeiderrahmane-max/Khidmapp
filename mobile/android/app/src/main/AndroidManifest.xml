@@ -1,4 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Présente par défaut uniquement dans les manifests debug/profile
+         (voir android/app/src/debug/AndroidManifest.xml) : sans elle, un
+         build release ne pourrait faire aucun appel réseau (API, WebView
+         boutique) alors même que l'app entière en dépend. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="khidmapp"
         android:name="${applicationName}"
@@ -40,14 +45,6 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
-        </intent>
-        <!-- Requis par url_launcher (API 30+, visibilité des paquets) pour
-             ouvrir le vrai site d'une boutique dans le navigateur externe
-             (voir HomePage._openBoutique). -->
-        <intent>
-            <action android:name="android.intent.action.VIEW"/>
-            <category android:name="android.intent.category.BROWSABLE"/>
-            <data android:scheme="https"/>
         </intent>
     </queries>
 </manifest>
