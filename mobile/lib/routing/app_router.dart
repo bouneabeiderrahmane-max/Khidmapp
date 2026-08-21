@@ -49,7 +49,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/custom-order/new',
-        builder: (context, state) => const NewCustomOrderPage(),
+        builder: (context, state) {
+          final prefill = state.extra as ({String? productUrl, double? priceEur})?;
+          return NewCustomOrderPage(
+            initialProductUrl: prefill?.productUrl,
+            initialPriceEur: prefill?.priceEur,
+          );
+        },
       ),
       GoRoute(
         path: '/custom-order',

@@ -77,6 +77,12 @@
   "homeSearchBoutique": "ابحث عن متجر",
   "homeBoutiquesTitle": "متاجرنا",
   "homeBoutiquesEmpty": "لا يوجد متجر يطابق هذا البحث",
+  "boutiqueDetectedPrice": "السعر المكتشف: ≈ {price} يورو",
+  "@boutiqueDetectedPrice": {
+    "placeholders": { "price": {} }
+  },
+  "boutiqueDetectedPriceHint": "اكتشاف تلقائي، تحقق منه قبل الإرسال.",
+  "boutiqueContinueWithKhidmapp": "متابعة مع خدمة آب",
   "homeCustomOrderCta": "طلب مخصص",
   "homeCustomOrderSubtitle": "وجدت منتجاً في مكان آخر؟ أرسل لنا الرابط ونحن نتكفل بالباقي.",
   "homeMyCustomOrders": "طلباتي المخصصة",

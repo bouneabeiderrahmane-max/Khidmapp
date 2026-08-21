@@ -77,6 +77,12 @@
   "homeSearchBoutique": "Rechercher une boutique",
   "homeBoutiquesTitle": "Nos boutiques",
   "homeBoutiquesEmpty": "Aucune boutique ne correspond à cette recherche",
+  "boutiqueDetectedPrice": "Prix détecté : ≈ {price} €",
+  "@boutiqueDetectedPrice": {
+    "placeholders": { "price": {} }
+  },
+  "boutiqueDetectedPriceHint": "Détection automatique, à vérifier avant l'envoi.",
+  "boutiqueContinueWithKhidmapp": "Continuer avec Khidmapp",
   "homeCustomOrderCta": "Commande personnalisée",
   "homeCustomOrderSubtitle": "Trouvé un produit ailleurs ? Envoyez-nous le lien, nous nous occupons du reste.",
   "homeMyCustomOrders": "Mes commandes personnalisées",

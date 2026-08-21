@@ -16,10 +16,12 @@ import '../data/custom_order_models.dart';
 import '../data/custom_order_repository.dart';
 
 class _ItemFormState {
-  _ItemFormState()
-    : productUrlController = TextEditingController(),
+  _ItemFormState({String? initialProductUrl, double? initialPriceEur})
+    : productUrlController = TextEditingController(text: initialProductUrl ?? ''),
       quantityController = TextEditingController(text: '1'),
-      priceController = TextEditingController(),
+      priceController = TextEditingController(
+        text: initialPriceEur != null ? initialPriceEur.toStringAsFixed(2) : '',
+      ),
       notesController = TextEditingController();
 
   final TextEditingController productUrlController;
@@ -37,14 +39,23 @@ class _ItemFormState {
 }
 
 class NewCustomOrderPage extends ConsumerStatefulWidget {
-  const NewCustomOrderPage({super.key});
+  const NewCustomOrderPage({super.key, this.initialProductUrl, this.initialPriceEur});
+
+  /// Préremplissage depuis le navigateur intégré (BoutiqueWebViewPage) :
+  /// lien de la page en cours et prix détecté automatiquement (heuristique,
+  /// pas garanti — voir le docblock de BoutiqueWebViewPage), pour que le
+  /// client n'ait plus qu'à vérifier avant d'envoyer.
+  final String? initialProductUrl;
+  final double? initialPriceEur;
 
   @override
   ConsumerState<NewCustomOrderPage> createState() => _NewCustomOrderPageState();
 }
 
 class _NewCustomOrderPageState extends ConsumerState<NewCustomOrderPage> {
-  final List<_ItemFormState> _items = [_ItemFormState()];
+  late final List<_ItemFormState> _items = [
+    _ItemFormState(initialProductUrl: widget.initialProductUrl, initialPriceEur: widget.initialPriceEur),
+  ];
   int? _addressId;
   String _paymentMethod = 'bankily';
   WeightTierOption _weightTier = WeightTierOption.petit;
@@ -252,6 +263,14 @@ class _ItemCardState extends ConsumerState<_ItemCard> {
   Timer? _debounce;
   double? _previewMru;
   bool _isPreviewLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.item.priceController.text.trim().isNotEmpty) {
+      _schedulePreview();
+    }
+  }
 
   @override
   void dispose() {

@@ -4,15 +4,62 @@ import 'package:webview_flutter/webview_flutter.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../data/home_repository.dart';
 
+/// Script best-effort : parcourt le texte de la page à la recherche d'un
+/// montant proche d'un mot-clé de total (total/subtotal/sous-total/
+/// montant/importe/suma), typique d'une page panier. Aucune garantie de
+/// fonctionnement — chaque boutique a sa propre structure de page, jamais
+/// documentée ni stable (voir le docblock de BoutiqueWebViewPage) ; en
+/// l'absence de correspondance, rien n'est envoyé à Flutter et le client
+/// garde l'ancien parcours manuel via le bouton flottant.
+const String _priceDetectionScript = '''
+(function() {
+  function extractPrice(text) {
+    var m = text.match(/(\\d{1,5}[.,]\\d{2})\\s*(€|EUR)/i) || text.match(/(€|EUR)\\s*(\\d{1,5}[.,]\\d{2})/i);
+    if (!m) return null;
+    var raw = /^\\d/.test(m[1]) ? m[1] : m[2];
+    var value = parseFloat(raw.replace(',', '.'));
+    return isNaN(value) ? null : value;
+  }
+  var keywords = ['subtotal', 'sub-total', 'sous-total', 'total', 'importe', 'montant', 'suma'];
+  var candidates = [];
+  var elements = document.body ? document.body.getElementsByTagName('*') : [];
+  for (var i = 0; i < elements.length; i++) {
+    var text = (elements[i].innerText || '').trim();
+    if (!text || text.length > 120) continue;
+    var lower = text.toLowerCase();
+    for (var k = 0; k < keywords.length; k++) {
+      if (lower.indexOf(keywords[k]) !== -1) {
+        var price = extractPrice(text);
+        if (price !== null && price > 0 && price < 100000) candidates.push(price);
+        break;
+      }
+    }
+  }
+  if (candidates.length > 0) {
+    KhidmappPriceDetector.postMessage(String(Math.max.apply(null, candidates)));
+  }
+})();
+''';
+
 /// Affiche le vrai site de la boutique dans un navigateur intégré à
 /// l'application (plutôt que le navigateur externe du téléphone, sur
 /// demande explicite de l'utilisateur — "tout doit rester dans l'app,
 /// comme les autres apps de ce type") : Khidmapp ne synchronise toujours
 /// pas réellement de catalogue (voir StubCatalogFetcher), le client
 /// navigue donc directement sur le site d'origine, sans en quitter
-/// l'application. Un bouton flottant reste accessible vers "Commande
-/// personnalisée" pour que le client puisse y revenir facilement une fois
-/// le produit trouvé.
+/// l'application.
+///
+/// Sur le modèle d'une app tierce de référence (captures d'écran
+/// fournies par l'utilisateur) : une bannière apparaît en bas de l'écran
+/// dès qu'un montant plausible est détecté sur la page courante (méthode
+/// heuristique, `_priceDetectionScript` — **jamais garantie**, chaque site
+/// ayant sa propre structure). Le client vérifie ce montant puis
+/// "Continuer avec Khidmapp" pré-remplit le formulaire de commande
+/// personnalisée (lien + prix) — il reste à vérifier/envoyer, comme pour
+/// toute demande personnalisée ; Khidmapp n'achète jamais automatiquement,
+/// ni n'intercepte le vrai paiement du site tiers. Sans détection, le
+/// bouton flottant "Commande personnalisée" (lien vide, à coller
+/// manuellement) reste la solution de repli.
 class BoutiqueWebViewPage extends StatefulWidget {
   const BoutiqueWebViewPage({super.key, required this.boutique});
 
@@ -25,19 +72,58 @@ class BoutiqueWebViewPage extends StatefulWidget {
 class _BoutiqueWebViewPageState extends State<BoutiqueWebViewPage> {
   late final WebViewController _controller;
   bool _isLoading = true;
+  double? _detectedPriceEur;
+  String? _detectedPageUrl;
 
   @override
   void initState() {
     super.initState();
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..addJavaScriptChannel(
+        'KhidmappPriceDetector',
+        onMessageReceived: (message) {
+          final price = double.tryParse(message.message);
+          if (price == null || !mounted) return;
+          setState(() {
+            _detectedPriceEur = price;
+            _detectedPageUrl = null; // renseigné juste après via currentUrl().
+          });
+          _controller.currentUrl().then((url) {
+            if (mounted) setState(() => _detectedPageUrl = url);
+          });
+        },
+      )
       ..setNavigationDelegate(
         NavigationDelegate(
-          onPageStarted: (_) => setState(() => _isLoading = true),
-          onPageFinished: (_) => setState(() => _isLoading = false),
+          onPageStarted: (_) => setState(() {
+            _isLoading = true;
+            // Une nouvelle page peut ne plus correspondre au montant détecté
+            // sur la précédente — on efface plutôt que d'afficher un prix
+            // obsolète.
+            _detectedPriceEur = null;
+            _detectedPageUrl = null;
+          }),
+          onPageFinished: (_) async {
+            setState(() => _isLoading = false);
+            // Nombre de sites e-commerce sont des SPA dont le contenu du
+            // panier se charge après l'évènement "page terminée" — court
+            // délai avant de scanner, sans bloquer l'affichage de la page.
+            await Future.delayed(const Duration(milliseconds: 1200));
+            if (mounted) {
+              _controller.runJavaScript(_priceDetectionScript);
+            }
+          },
         ),
       )
       ..loadRequest(Uri.parse(widget.boutique.baseUrl));
+  }
+
+  void _continueWithKhidmapp() {
+    context.push(
+      '/custom-order/new',
+      extra: (productUrl: _detectedPageUrl, priceEur: _detectedPriceEur),
+    );
   }
 
   @override
@@ -60,10 +146,63 @@ class _BoutiqueWebViewPageState extends State<BoutiqueWebViewPage> {
           if (_isLoading) const LinearProgressIndicator(),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/custom-order/new'),
-        icon: const Icon(Icons.add_link),
-        label: Text(l10n.homeCustomOrderCta),
+      bottomNavigationBar: _detectedPriceEur != null
+          ? _DetectedPriceBanner(priceEur: _detectedPriceEur!, onContinue: _continueWithKhidmapp)
+          : null,
+      floatingActionButton: _detectedPriceEur == null
+          ? FloatingActionButton.extended(
+              onPressed: () => context.push('/custom-order/new'),
+              icon: const Icon(Icons.add_link),
+              label: Text(l10n.homeCustomOrderCta),
+            )
+          : null,
+    );
+  }
+}
+
+class _DetectedPriceBanner extends StatelessWidget {
+  const _DetectedPriceBanner({required this.priceEur, required this.onContinue});
+
+  final double priceEur;
+  final VoidCallback onContinue;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return SafeArea(
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: colorScheme.primaryContainer,
+          border: Border(top: BorderSide(color: colorScheme.outlineVariant)),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.boutiqueDetectedPrice(priceEur.toStringAsFixed(2)),
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                  Text(
+                    l10n.boutiqueDetectedPriceHint,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            FilledButton(onPressed: onContinue, child: Text(l10n.boutiqueContinueWithKhidmapp)),
+          ],
+        ),
       ),
     );
   }
