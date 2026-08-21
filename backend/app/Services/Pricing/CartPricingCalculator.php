@@ -11,8 +11,11 @@ class CartPricingCalculator
 
     /**
      * @param  Collection<int, mixed>  $items  CartItem ou OrderItem-like : doit exposer ->variant et ->quantity
+     * @param  string|null  $weightTier  Poids de colis choisi par le client au paiement (PackageWeightTier) —
+     *                                   null pour un aperçu avant cette étape (ex. GET /cart), auquel cas
+     *                                   la grille par tranche de prix sert d'estimation (voir PricingService::deliveryFee()).
      */
-    public function calculate(Collection $items, ?string $zone = null): CartTotals
+    public function calculate(Collection $items, ?string $zone = null, ?string $weightTier = null, float $extraWeightKg = 0.0): CartTotals
     {
         $zone ??= config('pricing.default_zone');
 
@@ -38,7 +41,7 @@ class CartPricingCalculator
             ];
         }
 
-        $deliveryFeeMru = $items->isNotEmpty() ? $this->pricing->deliveryFeeForAmount($zone, $subtotalMru) : 0.0;
+        $deliveryFeeMru = $items->isNotEmpty() ? $this->pricing->deliveryFee($zone, $subtotalMru, $weightTier, $extraWeightKg) : 0.0;
         $managementFeeMru = $items->isNotEmpty()
             ? round(($subtotalMru + $deliveryFeeMru) * config('pricing.management_fee_percent') / 100, 2)
             : 0.0;

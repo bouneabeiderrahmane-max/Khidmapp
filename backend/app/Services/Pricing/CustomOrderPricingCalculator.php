@@ -21,7 +21,7 @@ class CustomOrderPricingCalculator
     /**
      * @param  Collection<int, CustomOrderItem>  $items
      */
-    public function calculate(Collection $items, ?string $zone = null): CartTotals
+    public function calculate(Collection $items, ?string $zone = null, ?string $weightTier = null, float $extraWeightKg = 0.0): CartTotals
     {
         $zone ??= config('pricing.default_zone');
 
@@ -47,7 +47,7 @@ class CustomOrderPricingCalculator
             ];
         }
 
-        $deliveryFeeMru = $items->isNotEmpty() ? $this->pricing->deliveryFeeForAmount($zone, $subtotalMru) : 0.0;
+        $deliveryFeeMru = $items->isNotEmpty() ? $this->pricing->deliveryFee($zone, $subtotalMru, $weightTier, $extraWeightKg) : 0.0;
         $managementFeeMru = $items->isNotEmpty()
             ? round(($subtotalMru + $deliveryFeeMru) * config('pricing.management_fee_percent') / 100, 2)
             : 0.0;

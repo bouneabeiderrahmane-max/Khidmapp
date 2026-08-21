@@ -38,6 +38,7 @@ class CustomOrderRequestControllerTest extends TestCase
         return array_merge([
             'address_id' => $this->addressId(),
             'payment_method' => 'bankily',
+            'weight_tier' => 'petit',
             'items' => [
                 [
                     'product_url' => 'https://boutique-exemple.es/produit/123',

@@ -12,6 +12,7 @@ use App\Models\MarginRule;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Support\MarginScope;
+use App\Support\PackageWeightTier;
 use App\Support\PriceMarginTier;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
@@ -128,6 +129,24 @@ class PricingService
         }
 
         return (float) $tier->fee_mru;
+    }
+
+    /**
+     * Frais de livraison au moment du paiement (panier réel, commande
+     * manuelle, demande personnalisée) : si le client a choisi un poids de
+     * colis (`PackageWeightTier`) pour la zone Nouakchott — seule zone pour
+     * laquelle des tarifs par poids ont été fournis — ce choix prévaut sur
+     * la grille par tranche de prix. Sans choix de poids (aperçu avant
+     * l'étape de paiement) ou pour toute autre zone, on retombe sur
+     * deliveryFeeForAmount() comme avant.
+     */
+    public function deliveryFee(string $zone, float $subtotalMru, ?string $weightTier = null, float $extraWeightKg = 0.0): float
+    {
+        if ($zone === 'nouakchott' && $weightTier !== null) {
+            return PackageWeightTier::feeMru($weightTier, $extraWeightKg);
+        }
+
+        return $this->deliveryFeeForAmount($zone, $subtotalMru);
     }
 
     /**

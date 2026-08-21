@@ -25,6 +25,8 @@ type CustomOrderRequest = {
   stage_label: string | null
   address: { label: string; city: string; area: string | null; phone: string } | null
   payment_method: string | null
+  weight_tier_label: string | null
+  extra_weight_kg: string | number | null
   admin_note: string | null
   reviewed_at: string | null
   order?: { id: number; status: string; total_mru: string | number } | null
@@ -128,6 +130,13 @@ export function CustomOrdersPage() {
                 <div className="mt-2 text-xs text-gray-500">
                   Livraison : {r.address.label}, {r.address.city}
                   {r.address.area ? `, ${r.address.area}` : ''} · Paiement : {r.payment_method ?? '—'}
+                  {r.weight_tier_label && (
+                    <>
+                      {' '}
+                      · Poids : {r.weight_tier_label}
+                      {r.extra_weight_kg && Number(r.extra_weight_kg) > 0 ? ` (+${r.extra_weight_kg} kg)` : ''}
+                    </>
+                  )}
                 </div>
               )}
 

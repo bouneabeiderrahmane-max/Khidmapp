@@ -39,11 +39,15 @@ class CustomOrderRequestController extends Controller
     public function store(StoreCustomOrderRequestRequest $request): JsonResponse
     {
         $customOrderRequest = DB::transaction(function () use ($request) {
+            $extraWeightKg = (float) $request->input('extra_weight_kg', 0);
+
             $customOrderRequest = CustomOrderRequest::query()->create([
                 'user_id' => $request->user()->id,
                 'status' => CustomOrderRequestStatus::PENDING,
                 'address_id' => $request->integer('address_id'),
                 'payment_method' => $request->input('payment_method'),
+                'weight_tier' => $request->input('weight_tier'),
+                'extra_weight_kg' => $extraWeightKg > 0 ? $extraWeightKg : null,
             ]);
 
             foreach ($request->input('items') as $line) {

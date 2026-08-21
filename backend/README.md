@@ -81,7 +81,16 @@ Demande explicite après coup, sur le modèle d'une app tierce de type "achat pa
 - **Marge (invisible au client)** : `App\Support\PriceMarginTier::percentFor()` fixe désormais le défaut par tranche de prix EUR affiché (< 200 € : 20 %, 200–700 € : 15 %, > 700 € : 10 %), remplaçant l'ancien défaut plat (`config('pricing.default_margin_percent')`). Une règle `margin_rules` de catégorie ou de boutique reste prioritaire, comme avant ; une règle `global` explicite (créée par un administrateur, ex. campagne ponctuelle) prévaut elle aussi sur le palier, mais n'est plus seedée automatiquement (voir `PricingSeeder` et la migration `remove_auto_seeded_global_margin_rules`, qui retire la règle globale plate seedée par défaut sur les installations existantes pour que les paliers s'appliquent réellement).
 - **Coût de gestion (visible au client)** : 5 % (`config('pricing.management_fee_percent')`) calculé sur (sous-total article + frais de livraison), ajouté au total — `CartTotals::managementFeeMru`, colonne `orders.management_fee_mru`, exposé par `OrderResource`/`GET /api/v1/cart` sous `management_fee_mru`.
 
-**Limite signalée explicitement** : les tranches de livraison restent par prix (§ Sprint 4), pas par poids — une grille par poids réelle a été demandée mais les valeurs MRU n'ont pas encore été fournies ; non implémentée tant qu'elles ne le sont pas. Le champ code promo évoqué dans la même demande n'a pas non plus été tranché (réponse utilisateur non exploitable) — aucun champ promo n'existe côté backend.
+### Livraison par poids de colis choisi au paiement (extension)
+
+Sur le modèle de l'app de référence "achat par proxy" (capture d'écran fournie) : le client choisit lui-même, au moment du paiement, un poids approximatif de colis parmi 3 paliers — c'est une estimation déclarative, pas un poids mesuré (impossible à connaître avant l'achat effectif pour une commande personnalisée).
+
+- `App\Support\PackageWeightTier` : `petit` (0-4 kg, 600 MRU), `moyen` (4-7 kg, 1200 MRU), `tres_grand` (7-15 kg, 1700 MRU + 200 MRU par kg au-delà de 15 kg, champ `extra_weight_kg`).
+- Valable **uniquement pour la zone Nouakchott** (seule zone pour laquelle des tarifs par poids ont été fournis) — `PricingService::deliveryFee(zone, subtotalMru, weightTier, extraWeightKg)` : avec un poids choisi sur Nouakchott, ce choix prévaut ; sans poids (aperçu panier avant le paiement) ou sur une autre zone, on retombe sur la grille par tranche de prix (`deliveryFeeForAmount`, § Sprint 4) comme avant.
+- Champ `weight_tier` désormais **requis** sur `POST /orders`, `POST /admin/orders` (commande manuelle) et `POST /custom-order-requests` (reporté sur la Commande réelle à l'approbation) ; `extra_weight_kg` optionnel, rejeté si le palier choisi n'est pas `tres_grand`.
+- Exposé par `OrderResource`/`CustomOrderRequestResource` sous `weight_tier`, `weight_tier_label` (traduit) et `extra_weight_kg`.
+
+**Limite signalée explicitement** : le champ code promo évoqué dans la même demande n'a pas été tranché (réponse utilisateur non exploitable) — aucun champ promo n'existe côté backend. La refonte visuelle du checkout par étapes numérotées (Adresse → Mode de livraison → Paiement) façon capture d'écran n'a pas non plus été construite — seul le nouveau champ de poids a été ajouté aux écrans existants.
 
 ## Catalogue & recherche (Sprint 5)
 

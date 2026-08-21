@@ -40,8 +40,12 @@ class AdminCustomOrderRequestControllerTest extends TestCase
         $this->client->assignRole(Roles::CLIENT);
     }
 
-    private function pendingRequest(float $estimatedPriceEur = 30, int $quantity = 2, ?int $boutiqueId = null): CustomOrderRequest
-    {
+    private function pendingRequest(
+        float $estimatedPriceEur = 30,
+        int $quantity = 2,
+        ?int $boutiqueId = null,
+        ?string $weightTier = null,
+    ): CustomOrderRequest {
         $address = $this->client->addresses()->create(['label' => 'Domicile', 'city' => 'Nouakchott']);
 
         $request = CustomOrderRequest::query()->create([
@@ -49,6 +53,7 @@ class AdminCustomOrderRequestControllerTest extends TestCase
             'status' => CustomOrderRequestStatus::PENDING,
             'address_id' => $address->id,
             'payment_method' => 'bankily',
+            'weight_tier' => $weightTier,
         ]);
 
         $request->items()->create([
@@ -111,6 +116,23 @@ class AdminCustomOrderRequestControllerTest extends TestCase
             ->assertJsonPath('data.order.subtotal_mru', '150.00')
             ->assertJsonPath('data.order.management_fee_mru', '17.50')
             ->assertJsonPath('data.order.total_mru', '367.50');
+    }
+
+    public function test_approving_uses_the_weight_tier_chosen_at_submission_for_delivery(): void
+    {
+        // 30 EUR * 10 = 300 MRU, +20% de marge = 360 MRU/unité, x2 = 720 MRU sous-total,
+        // palier "moyen paquet" = 1200 MRU de livraison (au lieu des 200 MRU de la grille par prix),
+        // + coût de gestion 5% sur (720+1200)=96 => 2016 MRU.
+        $request = $this->pendingRequest(estimatedPriceEur: 30, quantity: 2, weightTier: 'moyen');
+
+        $this->actingAs($this->admin, 'api')
+            ->postJson("/api/v1/admin/custom-order-requests/{$request->id}/approve")
+            ->assertOk()
+            ->assertJsonPath('data.order.subtotal_mru', '720.00')
+            ->assertJsonPath('data.order.delivery_fee_mru', '1200.00')
+            ->assertJsonPath('data.order.management_fee_mru', '96.00')
+            ->assertJsonPath('data.order.total_mru', '2016.00')
+            ->assertJsonPath('data.order.weight_tier', 'moyen');
     }
 
     public function test_rejecting_a_request_requires_a_reason_and_creates_no_order(): void

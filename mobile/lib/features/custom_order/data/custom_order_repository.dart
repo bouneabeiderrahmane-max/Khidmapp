@@ -23,6 +23,8 @@ class CustomOrderRepository {
   Future<CustomOrderRequest> submit({
     required int addressId,
     required String paymentMethod,
+    required String weightTier,
+    double? extraWeightKg,
     required List<NewCustomOrderItem> items,
   }) async {
     final response = await _dio.post(
@@ -30,6 +32,8 @@ class CustomOrderRepository {
       data: {
         'address_id': addressId,
         'payment_method': paymentMethod,
+        'weight_tier': weightTier,
+        if (extraWeightKg != null && extraWeightKg > 0) 'extra_weight_kg': extraWeightKg,
         'items': items.map((i) => i.toJson()).toList(),
       },
     );

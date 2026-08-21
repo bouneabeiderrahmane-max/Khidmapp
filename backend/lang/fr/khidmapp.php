@@ -92,6 +92,12 @@ return [
     ],
     'account_blocked' => 'Votre compte a été bloqué. Contactez le service client pour plus d\'informations.',
     'cannot_assign_internal_roles_to_client' => 'Impossible d\'attribuer un rôle interne à un compte client.',
+    'extra_weight_not_allowed_for_tier' => 'Le poids supplémentaire n\'est possible qu\'avec le palier "Très grand paquet".',
+    'weight_tier' => [
+        'petit' => 'Petit paquet (jusqu\'à 4 kg)',
+        'moyen' => 'Moyen paquet (4 à 7 kg)',
+        'tres_grand' => 'Très grand paquet (7 à 15 kg)',
+    ],
     'custom_order_status' => [
         'en_attente' => 'En attente de validation',
         'confirmee' => 'Confirmée',

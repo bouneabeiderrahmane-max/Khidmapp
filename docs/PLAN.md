@@ -433,9 +433,19 @@ Demande explicite après coup, sur le modèle d'une app tierce de type "achat pa
 - **Coût de gestion (visible au client)** : 5 % (`config('pricing.management_fee_percent')`), calculé sur (sous-total article + frais de livraison) — vérifié au centime près contre l'exemple chiffré fourni par l'utilisateur (21,90 € + 9,95 € de livraison, ×5 % = 1,59). Appliqué uniformément au catalogue, au panier et à la commande personnalisée (même moteur, `CartTotals::managementFeeMru` dans les deux calculateurs de prix) ; nouvelle colonne `orders.management_fee_mru`, exposée par `OrderResource` et `GET /api/v1/cart`.
 
 **Limites signalées explicitement, non implémentées dans cette révision** :
-- **Grille de livraison par poids** (Petit/Moyen/Très grand paquet, sur le modèle des captures d'écran) : demandée mais valeurs MRU réelles non fournies — la grille reste par tranche de prix (§7quinquies, point 5 des sujets ouverts) tant que ces chiffres ne sont pas communiqués.
 - **Champ code promo** : évoqué dans la même demande, réponse utilisateur non exploitable ("Something else" sans texte de suivi) — aucun champ, table ni logique de code promo n'existe côté backend (voir aussi le point 15 des sujets ouverts, promotions CDC 8.9.5, plus large et déjà non traité).
 - **Refonte visuelle du checkout façon étapes numérotées** (Adresse → Mode de livraison → Paiement) évoquée dans la demande initiale : non construite dans cette révision, qui s'est concentrée sur le moteur de calcul (marge + coût de gestion) et l'affichage de la nouvelle ligne dans les écrans de totaux existants (panier, détail de commande mobile, détail de commande admin).
+
+---
+
+## 7duodecies quinquies. Livraison par poids de colis choisi au paiement (extension hors CDC)
+
+Suite directe du point ci-dessus : l'utilisateur a fourni les tarifs réels par poids (capture d'écran de l'app de référence à l'appui, montrant un sélecteur "Poids de la commande" à choix unique au paiement) et a tranché deux ambiguïtés explicitement :
+- **Qui saisit le poids** : le client lui-même, en le choisissant parmi 3 paliers au moment du paiement (comme dans la capture) — pas une donnée produit stockée à l'avance (le catalogue actuel n'a pas de poids par produit) ni une donnée que l'administration devrait renseigner a posteriori.
+- **Portée** : s'applique au panier/checkout classique **et** à la commande personnalisée (même principe que le reste de cette révision de tarification).
+- **Zone** : les tarifs fournis (`petit` 0-4 kg = 600 MRU, `moyen` 4-7 kg = 1200 MRU, `tres_grand` 7-15 kg = 1700 MRU + 200 MRU/kg au-delà de 15 kg) sont **spécifiques à Nouakchott** ; les autres zones (non utilisées en pratique dans cette session, la zone étant toujours Nouakchott par défaut) retombent sur la grille par tranche de prix existante (§7quinquies) faute de chiffres.
+
+**Implémentation** : `App\Support\PackageWeightTier` (paliers + surcharge kg supplémentaire) ; `PricingService::deliveryFee()` — nouveau point d'entrée qui préfère le poids choisi sur Nouakchott, retombe sur `deliveryFeeForAmount()` sinon (aperçu panier avant l'étape de paiement, autres zones) ; `weight_tier`/`extra_weight_kg` ajoutés aux deux calculateurs de prix, à `orders` et `custom_order_requests` (reporté sur la Commande réelle à l'approbation), requis à la soumission (`POST /orders`, `POST /admin/orders`, `POST /custom-order-requests`). Mobile : sélecteur à 3 cartes (`WeightTierSelector`, clés et tarifs codés en dur en miroir du backend — même principe que les modes de paiement déjà codés en dur des deux côtés) sur l'écran de paiement du panier et sur le formulaire de commande personnalisée, avec champ de poids supplémentaire optionnel révélé pour le plus grand palier ; affiché ensuite dans le détail de commande (mobile et admin).
 
 ---
 

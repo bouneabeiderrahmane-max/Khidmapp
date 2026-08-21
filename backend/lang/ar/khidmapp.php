@@ -92,6 +92,12 @@ return [
     ],
     'account_blocked' => 'تم حظر حسابك. يرجى التواصل مع خدمة العملاء لمزيد من المعلومات.',
     'cannot_assign_internal_roles_to_client' => 'لا يمكن إسناد دور داخلي لحساب عميل.',
+    'extra_weight_not_allowed_for_tier' => 'الوزن الإضافي متاح فقط مع فئة "طرد كبير جداً".',
+    'weight_tier' => [
+        'petit' => 'طرد صغير (حتى 4 كغ)',
+        'moyen' => 'طرد متوسط (4 إلى 7 كغ)',
+        'tres_grand' => 'طرد كبير جداً (7 إلى 15 كغ)',
+    ],
     'custom_order_status' => [
         'en_attente' => 'قيد المراجعة',
         'confirmee' => 'مؤكدة',

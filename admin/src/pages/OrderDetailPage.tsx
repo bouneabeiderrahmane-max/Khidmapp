@@ -42,6 +42,9 @@ type OrderDetail = {
   delivery_fee_mru: string | number
   management_fee_mru: string | number
   delivery_zone: string | null
+  weight_tier: string | null
+  weight_tier_label: string | null
+  extra_weight_kg: string | number | null
   total_mru: string | number
   cancellation_reason: string | null
   refund_reason: string | null
@@ -120,6 +123,17 @@ export function OrderDetailPage() {
             <dd className="tabular-nums">{data.delivery_fee_mru} MRU</dd>
             <dt className="text-gray-500">Coût de gestion</dt>
             <dd className="tabular-nums">{data.management_fee_mru} MRU</dd>
+            {data.weight_tier_label && (
+              <>
+                <dt className="text-gray-500">Poids de la commande</dt>
+                <dd>
+                  {data.weight_tier_label}
+                  {data.extra_weight_kg && Number(data.extra_weight_kg) > 0
+                    ? ` (+${data.extra_weight_kg} kg)`
+                    : ''}
+                </dd>
+              </>
+            )}
             <dt className="text-gray-500 font-medium">Total</dt>
             <dd className="tabular-nums font-medium">{data.total_mru} MRU</dd>
             <dt className="text-gray-500">Mode de paiement</dt>

@@ -14,6 +14,7 @@ class CustomOrderRequest extends Model
     {
         return [
             'reviewed_at' => 'datetime',
+            'extra_weight_kg' => 'decimal:2',
         ];
     }
 

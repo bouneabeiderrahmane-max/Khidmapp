@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/models/weight_tier.dart';
 import '../../../core/network/api_exception.dart';
+import '../../../core/widgets/weight_tier_selector.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../account/application/account_providers.dart';
 import '../../auth/application/auth_controller.dart';
@@ -19,8 +21,16 @@ class CheckoutPage extends ConsumerStatefulWidget {
 class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   int? _addressId;
   String _paymentMethod = 'bankily';
+  WeightTierOption _weightTier = WeightTierOption.petit;
+  final _extraWeightController = TextEditingController();
   bool _isSubmitting = false;
   String? _error;
+
+  @override
+  void dispose() {
+    _extraWeightController.dispose();
+    super.dispose();
+  }
 
   Future<void> _confirm() async {
     if (_addressId == null) return;
@@ -30,9 +40,15 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       _error = null;
     });
     try {
+      final extraWeightKg = double.tryParse(_extraWeightController.text.trim().replaceAll(',', '.'));
       final order = await ref
           .read(orderSummaryRepositoryProvider)
-          .createOrder(addressId: _addressId!, paymentMethod: _paymentMethod);
+          .createOrder(
+            addressId: _addressId!,
+            paymentMethod: _paymentMethod,
+            weightTier: _weightTier.key,
+            extraWeightKg: extraWeightKg,
+          );
 
       if (_paymentMethod == 'bankily') {
         try {
@@ -121,6 +137,12 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                       DropdownMenuItem(value: 'manual', child: Text(l10n.checkoutPaymentManual)),
                     ],
                     onChanged: (value) => setState(() => _paymentMethod = value ?? _paymentMethod),
+                  ),
+                  const SizedBox(height: 20),
+                  WeightTierSelector(
+                    value: _weightTier,
+                    onChanged: (tier) => setState(() => _weightTier = tier),
+                    extraWeightController: _extraWeightController,
                   ),
                   const SizedBox(height: 12),
                   Text(

@@ -43,7 +43,11 @@ class CustomOrderRequestService
 
         $request->loadMissing('items');
         $address = Address::query()->findOrFail($request->address_id);
-        $totals = $this->calculator->calculate($request->items);
+        $totals = $this->calculator->calculate(
+            $request->items,
+            weightTier: $request->weight_tier,
+            extraWeightKg: (float) ($request->extra_weight_kg ?? 0),
+        );
 
         $order = DB::transaction(function () use ($request, $admin, $address, $totals, $note) {
             $order = Order::query()->create([
@@ -61,6 +65,8 @@ class CustomOrderRequestService
                 'delivery_fee_snapshot_mru' => $totals->deliveryFeeMru,
                 'management_fee_mru' => $totals->managementFeeMru,
                 'delivery_zone' => $totals->deliveryZone,
+                'weight_tier' => $request->weight_tier,
+                'extra_weight_kg' => $request->extra_weight_kg,
                 'total_mru' => $totals->totalMru,
             ]);
 

@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/models/weight_tier.dart';
 import '../../../core/network/api_exception.dart';
+import '../../../core/widgets/weight_tier_selector.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../account/application/account_providers.dart';
 import '../../auth/application/auth_controller.dart';
@@ -45,6 +47,8 @@ class _NewCustomOrderPageState extends ConsumerState<NewCustomOrderPage> {
   final List<_ItemFormState> _items = [_ItemFormState()];
   int? _addressId;
   String _paymentMethod = 'bankily';
+  WeightTierOption _weightTier = WeightTierOption.petit;
+  final _extraWeightController = TextEditingController();
   bool _isSubmitting = false;
   String? _error;
 
@@ -53,6 +57,7 @@ class _NewCustomOrderPageState extends ConsumerState<NewCustomOrderPage> {
     for (final item in _items) {
       item.dispose();
     }
+    _extraWeightController.dispose();
     super.dispose();
   }
 
@@ -81,9 +86,16 @@ class _NewCustomOrderPageState extends ConsumerState<NewCustomOrderPage> {
           )
           .toList();
 
+      final extraWeightKg = double.tryParse(_extraWeightController.text.trim().replaceAll(',', '.'));
       final created = await ref
           .read(customOrderRepositoryProvider)
-          .submit(addressId: _addressId!, paymentMethod: _paymentMethod, items: items);
+          .submit(
+            addressId: _addressId!,
+            paymentMethod: _paymentMethod,
+            weightTier: _weightTier.key,
+            extraWeightKg: extraWeightKg,
+            items: items,
+          );
 
       ref.invalidate(myCustomOrderRequestsProvider);
 
@@ -165,6 +177,12 @@ class _NewCustomOrderPageState extends ConsumerState<NewCustomOrderPage> {
                       DropdownMenuItem(value: 'manual', child: Text(l10n.customOrderPaymentManual)),
                     ],
                     onChanged: (value) => setState(() => _paymentMethod = value ?? _paymentMethod),
+                  ),
+                  const SizedBox(height: 20),
+                  WeightTierSelector(
+                    value: _weightTier,
+                    onChanged: (tier) => setState(() => _weightTier = tier),
+                    extraWeightController: _extraWeightController,
                   ),
                   const SizedBox(height: 20),
                   for (var i = 0; i < _items.length; i++)

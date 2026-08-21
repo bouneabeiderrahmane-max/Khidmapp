@@ -12,6 +12,7 @@ use App\Models\MarginRule;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Services\Pricing\PricingService;
+use App\Support\PackageWeightTier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -175,6 +176,39 @@ class PricingServiceTest extends TestCase
 
         $this->assertSame(100.0, $cheap->deliveryFeeMru);
         $this->assertSame(200.0, $expensive->deliveryFeeMru);
+    }
+
+    /**
+     * Le poids de colis choisi par le client (App\Support\PackageWeightTier)
+     * prévaut sur la grille par tranche de prix, mais uniquement pour la
+     * zone Nouakchott (seule zone pour laquelle des tarifs par poids ont
+     * été fournis) — voir PricingService::deliveryFee().
+     */
+    public function test_delivery_fee_uses_the_weight_tier_for_nouakchott_when_one_is_chosen(): void
+    {
+        DeliveryFeeTier::query()->create(['zone' => 'nouakchott', 'min_price_mru' => 0, 'max_price_mru' => null, 'fee_mru' => 9999]);
+
+        $fee = $this->service->deliveryFee('nouakchott', 100.0, PackageWeightTier::MOYEN);
+
+        $this->assertSame(1200.0, $fee);
+    }
+
+    public function test_delivery_fee_falls_back_to_the_price_tier_without_a_weight_tier(): void
+    {
+        DeliveryFeeTier::query()->create(['zone' => 'nouakchott', 'min_price_mru' => 0, 'max_price_mru' => null, 'fee_mru' => 350]);
+
+        $fee = $this->service->deliveryFee('nouakchott', 100.0);
+
+        $this->assertSame(350.0, $fee);
+    }
+
+    public function test_delivery_fee_ignores_the_weight_tier_outside_nouakchott(): void
+    {
+        DeliveryFeeTier::query()->create(['zone' => 'autre_zone', 'min_price_mru' => 0, 'max_price_mru' => null, 'fee_mru' => 400]);
+
+        $fee = $this->service->deliveryFee('autre_zone', 100.0, PackageWeightTier::TRES_GRAND);
+
+        $this->assertSame(400.0, $fee);
     }
 
     public function test_it_throws_when_no_exchange_rate_is_configured(): void

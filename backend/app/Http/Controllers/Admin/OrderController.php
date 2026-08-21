@@ -87,9 +87,11 @@ class OrderController extends Controller
             return $item;
         });
 
-        $totals = $this->calculator->calculate($items);
+        $weightTier = $request->string('weight_tier')->toString();
+        $extraWeightKg = (float) $request->input('extra_weight_kg', 0);
+        $totals = $this->calculator->calculate($items, weightTier: $weightTier, extraWeightKg: $extraWeightKg);
 
-        $order = DB::transaction(function () use ($request, $address, $totals) {
+        $order = DB::transaction(function () use ($request, $address, $totals, $weightTier, $extraWeightKg) {
             $order = Order::query()->create([
                 'user_id' => $request->integer('user_id'),
                 'created_by_agent_id' => $request->user()->id,
@@ -106,6 +108,8 @@ class OrderController extends Controller
                 'delivery_fee_snapshot_mru' => $totals->deliveryFeeMru,
                 'management_fee_mru' => $totals->managementFeeMru,
                 'delivery_zone' => $totals->deliveryZone,
+                'weight_tier' => $weightTier,
+                'extra_weight_kg' => $extraWeightKg > 0 ? $extraWeightKg : null,
                 'total_mru' => $totals->totalMru,
             ]);
 

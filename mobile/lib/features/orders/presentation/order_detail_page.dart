@@ -56,6 +56,22 @@ class OrderDetailPage extends ConsumerWidget {
                     _TotalRow(label: l10n.cartSubtotal, value: order.subtotalMru),
                     _TotalRow(label: l10n.cartDeliveryFee, value: order.deliveryFeeMru),
                     _TotalRow(label: l10n.cartManagementFee, value: order.managementFeeMru),
+                    if (order.weightTierLabel != null)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(l10n.weightTierTitle, style: Theme.of(context).textTheme.bodyMedium),
+                            Text(
+                              order.extraWeightKg != null && order.extraWeightKg! > 0
+                                  ? '${order.weightTierLabel} (+${order.extraWeightKg!.toStringAsFixed(2)} kg)'
+                                  : order.weightTierLabel!,
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ],
+                        ),
+                      ),
                     const Divider(),
                     _TotalRow(label: l10n.cartTotal, value: order.totalMru, emphasize: true),
                   ],

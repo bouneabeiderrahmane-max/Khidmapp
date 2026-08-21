@@ -68,6 +68,7 @@ class AdminOrderControllerTest extends TestCase
                 'user_id' => $this->client->id,
                 'address_id' => $addressId,
                 'payment_method' => 'manual',
+                'weight_tier' => 'petit',
                 'items' => [['product_variant_id' => $variant->id, 'quantity' => 1]],
             ])
             ->assertCreated();

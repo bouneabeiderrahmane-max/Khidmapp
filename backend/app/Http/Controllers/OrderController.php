@@ -69,9 +69,11 @@ class OrderController extends Controller
         }
 
         $address = Address::query()->findOrFail($request->integer('address_id'));
-        $totals = $this->calculator->calculate($items);
+        $weightTier = $request->string('weight_tier')->toString();
+        $extraWeightKg = (float) $request->input('extra_weight_kg', 0);
+        $totals = $this->calculator->calculate($items, weightTier: $weightTier, extraWeightKg: $extraWeightKg);
 
-        $order = DB::transaction(function () use ($request, $address, $totals, $items) {
+        $order = DB::transaction(function () use ($request, $address, $totals, $items, $weightTier, $extraWeightKg) {
             $order = Order::query()->create([
                 'user_id' => $request->user()->id,
                 'status' => OrderStatus::AWAITING_PAYMENT,
@@ -87,6 +89,8 @@ class OrderController extends Controller
                 'delivery_fee_snapshot_mru' => $totals->deliveryFeeMru,
                 'management_fee_mru' => $totals->managementFeeMru,
                 'delivery_zone' => $totals->deliveryZone,
+                'weight_tier' => $weightTier,
+                'extra_weight_kg' => $extraWeightKg > 0 ? $extraWeightKg : null,
                 'total_mru' => $totals->totalMru,
             ]);
 

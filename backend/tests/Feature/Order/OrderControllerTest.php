@@ -54,6 +54,73 @@ class OrderControllerTest extends TestCase
             ->assertStatus(422);
     }
 
+    public function test_checkout_requires_a_weight_tier(): void
+    {
+        $variant = $this->variant();
+        $cart = Cart::query()->create(['user_id' => $this->client->id]);
+        $cart->items()->create(['product_variant_id' => $variant->id, 'quantity' => 1]);
+
+        $this->actingAs($this->client, 'api')
+            ->postJson('/api/v1/orders', ['address_id' => $this->addressId(), 'payment_method' => 'bankily'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['weight_tier']);
+    }
+
+    public function test_checkout_rejects_an_unknown_weight_tier(): void
+    {
+        $variant = $this->variant();
+        $cart = Cart::query()->create(['user_id' => $this->client->id]);
+        $cart->items()->create(['product_variant_id' => $variant->id, 'quantity' => 1]);
+
+        $this->actingAs($this->client, 'api')
+            ->postJson('/api/v1/orders', [
+                'address_id' => $this->addressId(),
+                'payment_method' => 'bankily',
+                'weight_tier' => 'gigantesque',
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['weight_tier']);
+    }
+
+    public function test_checkout_rejects_extra_weight_outside_the_largest_tier(): void
+    {
+        $variant = $this->variant();
+        $cart = Cart::query()->create(['user_id' => $this->client->id]);
+        $cart->items()->create(['product_variant_id' => $variant->id, 'quantity' => 1]);
+
+        $this->actingAs($this->client, 'api')
+            ->postJson('/api/v1/orders', [
+                'address_id' => $this->addressId(),
+                'payment_method' => 'bankily',
+                'weight_tier' => 'petit',
+                'extra_weight_kg' => 2,
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['extra_weight_kg']);
+    }
+
+    public function test_checkout_applies_the_extra_weight_surcharge_on_the_largest_tier(): void
+    {
+        $variant = $this->variant(50);
+        $cart = Cart::query()->create(['user_id' => $this->client->id]);
+        $cart->items()->create(['product_variant_id' => $variant->id, 'quantity' => 2]);
+
+        $response = $this->actingAs($this->client, 'api')
+            ->postJson('/api/v1/orders', [
+                'address_id' => $this->addressId(),
+                'payment_method' => 'bankily',
+                'weight_tier' => 'tres_grand',
+                'extra_weight_kg' => 3,
+            ])
+            ->assertCreated();
+
+        // Palier "très grand paquet" 1700 MRU + 3 kg × 200 MRU = 2300 MRU.
+        $response
+            ->assertJsonPath('data.weight_tier', 'tres_grand')
+            ->assertJsonPath('data.extra_weight_kg', '3.00')
+            ->assertJsonPath('data.delivery_fee_mru', '2300.00');
+    }
+
     public function test_checkout_rejects_an_address_belonging_to_another_user(): void
     {
         $variant = $this->variant();
@@ -76,16 +143,22 @@ class OrderControllerTest extends TestCase
         $cart->items()->create(['product_variant_id' => $variant->id, 'quantity' => 2]);
 
         $response = $this->actingAs($this->client, 'api')
-            ->postJson('/api/v1/orders', ['address_id' => $this->addressId(), 'payment_method' => 'bankily'])
+            ->postJson('/api/v1/orders', [
+                'address_id' => $this->addressId(),
+                'payment_method' => 'bankily',
+                'weight_tier' => 'petit',
+            ])
             ->assertCreated();
 
         $response
             ->assertJsonPath('data.status', OrderStatus::AWAITING_PAYMENT)
             ->assertJsonPath('data.subtotal_mru', '1000.00')
-            ->assertJsonPath('data.delivery_fee_mru', '200.00')
-            // Coût de gestion 5% sur (sous-total + livraison) : (1000+200)*5% = 60.
-            ->assertJsonPath('data.management_fee_mru', '60.00')
-            ->assertJsonPath('data.total_mru', '1260.00')
+            // Palier "petit paquet" (Nouakchott) : 600 MRU, quel que soit le sous-total.
+            ->assertJsonPath('data.delivery_fee_mru', '600.00')
+            // Coût de gestion 5% sur (sous-total + livraison) : (1000+600)*5% = 80.
+            ->assertJsonPath('data.management_fee_mru', '80.00')
+            ->assertJsonPath('data.total_mru', '1680.00')
+            ->assertJsonPath('data.weight_tier', 'petit')
             ->assertJsonPath('data.is_manual_order', false)
             ->assertJsonCount(1, 'data.items');
 
@@ -190,7 +263,11 @@ class OrderControllerTest extends TestCase
         $cart->items()->create(['product_variant_id' => $variant->id, 'quantity' => 1]);
 
         $this->actingAs($this->client, 'api')
-            ->postJson('/api/v1/orders', ['address_id' => $this->addressId(), 'payment_method' => 'bankily'])
+            ->postJson('/api/v1/orders', [
+                'address_id' => $this->addressId(),
+                'payment_method' => 'bankily',
+                'weight_tier' => 'petit',
+            ])
             ->assertCreated();
     }
 }

@@ -121,6 +121,8 @@ class OrderDetail {
     required this.deliveryFeeMru,
     required this.managementFeeMru,
     this.deliveryZone,
+    this.weightTierLabel,
+    this.extraWeightKg,
     required this.totalMru,
     this.cancellationReason,
     this.refundReason,
@@ -140,6 +142,8 @@ class OrderDetail {
     deliveryFeeMru: num.parse(json['delivery_fee_mru'].toString()).toDouble(),
     managementFeeMru: num.parse(json['management_fee_mru'].toString()).toDouble(),
     deliveryZone: json['delivery_zone'] as String?,
+    weightTierLabel: json['weight_tier_label'] as String?,
+    extraWeightKg: json['extra_weight_kg'] == null ? null : num.parse(json['extra_weight_kg'].toString()).toDouble(),
     totalMru: num.parse(json['total_mru'].toString()).toDouble(),
     cancellationReason: json['cancellation_reason'] as String?,
     refundReason: json['refund_reason'] as String?,
@@ -160,6 +164,8 @@ class OrderDetail {
   final double deliveryFeeMru;
   final double managementFeeMru;
   final String? deliveryZone;
+  final String? weightTierLabel;
+  final double? extraWeightKg;
   final double totalMru;
   final String? cancellationReason;
   final String? refundReason;
@@ -190,10 +196,20 @@ class OrderSummaryRepository {
     return OrderDetail.fromJson(response.data['data'] as Map<String, dynamic>);
   }
 
-  Future<OrderDetail> createOrder({required int addressId, required String paymentMethod}) async {
+  Future<OrderDetail> createOrder({
+    required int addressId,
+    required String paymentMethod,
+    required String weightTier,
+    double? extraWeightKg,
+  }) async {
     final response = await _dio.post(
       '/orders',
-      data: {'address_id': addressId, 'payment_method': paymentMethod},
+      data: {
+        'address_id': addressId,
+        'payment_method': paymentMethod,
+        'weight_tier': weightTier,
+        if (extraWeightKg != null && extraWeightKg > 0) 'extra_weight_kg': extraWeightKg,
+      },
     );
     return OrderDetail.fromJson(response.data['data'] as Map<String, dynamic>);
   }

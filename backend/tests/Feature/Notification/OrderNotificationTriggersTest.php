@@ -63,7 +63,7 @@ class OrderNotificationTriggersTest extends TestCase
         $cart->items()->create(['product_variant_id' => $variant->id, 'quantity' => 1]);
 
         $this->actingAs($this->client, 'api')
-            ->postJson('/api/v1/orders', ['address_id' => $addressId, 'payment_method' => 'bankily'])
+            ->postJson('/api/v1/orders', ['address_id' => $addressId, 'payment_method' => 'bankily', 'weight_tier' => 'petit'])
             ->assertCreated();
 
         $this->assertDatabaseHas('notification_logs', [
