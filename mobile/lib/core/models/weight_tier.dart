@@ -11,6 +11,10 @@ enum WeightTierOption {
 
   const WeightTierOption(this.key, this.feeMru, this.minKg, this.maxKg);
 
+  /// Surcharge par kg au-delà de 15 kg sur le plus grand palier — doit
+  /// rester synchronisée avec PackageWeightTier::EXTRA_KG_FEE_MRU côté backend.
+  static const double extraKgFeeMru = 200.0;
+
   final String key;
   final double feeMru;
   final int minKg;
